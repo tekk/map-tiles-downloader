@@ -43,4 +43,61 @@ htmlcov/
 # MacOS
 .DS_Store
 
+# PyInstaller
+*.manifest
+# Note: map-tiles-downloader.spec is intentionally tracked
+build/
+dist/
+
+# Downloaded map tiles (likely output directory)
+tiles/
+downloads/
+output/
+map_tiles/
+
+# Jupyter Notebooks
+.ipynb_checkpoints
+*.ipynb
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+
+# Log files
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# PyCharm
+*.iml
+*.ipr
+*.iws
+
+# Rope
+.ropeproject
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
 
