@@ -24,7 +24,6 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
           pip install . pyinstaller
       - name: Build binary
         shell: bash
@@ -35,15 +34,10 @@ jobs:
           if [ "${{ runner.os }}" = "Windows" ]; then
             EXT=".exe"
           fi
-          ARCH=$(python - <<'PY'
-import platform
-m = platform.machine()
-print({"AMD64": "x86_64", "x86_64": "x86_64", "arm64": "arm64", "aarch64": "arm64"}.get(m, m))
-PY
-)
+          ARCH=$(python -c "import platform; m = platform.machine(); print({'AMD64': 'x86_64', 'x86_64': 'x86_64', 'arm64': 'arm64', 'aarch64': 'arm64'}.get(m, m))")
           SRC="dist/map-tiles-downloader$EXT"
           TARGET="build-out/map-tiles-downloader-${{ runner.os }}-$ARCH-${{ github.ref_name }}$EXT"
-          mv "$SRC" "$TARGET"
+          cp "$SRC" "$TARGET"
       - name: Upload binary artifact
         uses: actions/upload-artifact@v4
         with:
@@ -78,6 +72,7 @@ PY
         uses: actions/download-artifact@v4
         with:
           path: ./artifacts
+          merge-multiple: true
       - name: Create Release and upload assets
         uses: softprops/action-gh-release@v2
         with:
@@ -88,5 +83,3 @@ PY
             artifacts/**/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-
