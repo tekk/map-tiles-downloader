@@ -1,5 +1,10 @@
 Map Tiles Downloader helps you fetch map tiles for offline use. You can pick places using a simple text interface, choose a tiles provider, and download exactly the areas you need. It shows progress, speed, ETA, and estimates how much disk space the download will take.
 
+[![CI](https://github.com/tekk/map-tiles-downloader/actions/workflows/ci.yml/badge.svg)](https://github.com/tekk/map-tiles-downloader/actions/workflows/ci.yml)
+[![Release](https://github.com/tekk/map-tiles-downloader/actions/workflows/release.yml/badge.svg)](https://github.com/tekk/map-tiles-downloader/actions/workflows/release.yml)
+[![PyPI - Python Version](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 The source code lives in the GitHub repository: [tekk/map-tiles-downloader](https://github.com/tekk/map-tiles-downloader).
 
 ```bash
