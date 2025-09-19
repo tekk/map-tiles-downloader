@@ -70,7 +70,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     # Subcommand: tui (curses-based)
     p_tui = sub.add_parser("tui", help="Launch text-based installer UI")
-    p_kml.add_argument("--log-level", type=str, default="INFO", choices=["CRITICAL","ERROR","WARNING","INFO","DEBUG"]) 
+    p_tui.add_argument("--log-level", type=str, default="INFO", choices=["CRITICAL","ERROR","WARNING","INFO","DEBUG"]) 
 
     return parser
 

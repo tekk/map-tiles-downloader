@@ -1,4 +1,4 @@
-from map_tiles_downloader.tiling import lon2tilex, lat2tiley, bbox_tile_span
+from map_tiles_downloader.tiling import lon2tilex, bbox_tile_span
 
 
 def test_lon2tilex_basic():

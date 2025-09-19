@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from math import log, tan, cos, pi
-from typing import Dict, Generator, Iterable, Tuple
+from typing import Dict, Generator, Tuple
 
 
 def lon2tilex(lon: float, zoom: int) -> int:

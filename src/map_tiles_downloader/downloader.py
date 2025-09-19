@@ -4,7 +4,7 @@ import asyncio
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, List, Optional, Sequence, Tuple, Callable
+from typing import Optional, Sequence, Callable
 
 import aiohttp
 import aiofiles
