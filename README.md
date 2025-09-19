@@ -17,6 +17,8 @@ pip install -e .
 mtd tui
 ```
 
+[![asciicast](https://asciinema.org/a/9xSAZNvP6PCDkvBfKqDlJtnVv.svg)](https://asciinema.org/a/9xSAZNvP6PCDkvBfKqDlJtnVv)
+
 If you prefer commands instead of the guided interface, you can use direct subcommands. Bounding box mode lets you fetch tiles for a given rectangle. KML mode expands points and routes into small areas around each location.
 
 ```bash
