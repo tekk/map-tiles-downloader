@@ -1,4 +1,8 @@
-Map Tiles Downloader helps you fetch map tiles for offline use. You can pick places using a simple text interface, choose a tiles provider, and download exactly the areas you need. It shows progress, speed, ETA, and estimates how much disk space the download will take.
+# Map Tiles Downloader
+
+## For Meshtastic & MeshCore
+
+This app helps you fetch map tiles quickly, for offline use. You can pick places using a simple text interface, choose tiles provider and map style, and then download the exact areas that you need. It shows download progress, speed, ETA, and estimates how much disk space will the maps use.
 
 [![CI](https://github.com/tekk/map-tiles-downloader/actions/workflows/ci.yml/badge.svg)](https://github.com/tekk/map-tiles-downloader/actions/workflows/ci.yml)
 [![Release](https://github.com/tekk/map-tiles-downloader/actions/workflows/release.yml/badge.svg)](https://github.com/tekk/map-tiles-downloader/actions/workflows/release.yml)
@@ -7,12 +11,14 @@ Map Tiles Downloader helps you fetch map tiles for offline use. You can pick pla
 
 The source code lives in the GitHub repository: [tekk/map-tiles-downloader](https://github.com/tekk/map-tiles-downloader).
 
+### If you want to compile yourself
+
 ```bash
 git clone https://github.com/tekk/map-tiles-downloader.git
 cd map-tiles-downloader
 ```
 
-To get started, install the project into a virtual environment. Then run the text-based installer and follow the prompts. You can select one or more continents, countries, and regions, choose a provider (Thunderforest or OpenStreetMap), set zoom levels, and choose where to save the tiles. If the provider needs an API key, you’ll be asked for it.
+Fist, install the project into a virtual environment. Then run the text-based installer and follow the prompts. You can select one or more continents, countries, and regions, choose a provider (Thunderforest or OpenStreetMap), set zoom levels, and choose where to save the tiles. If the provider needs an API key, you’ll be asked for it.
 
 ```bash
 python3 -m venv .venv
@@ -48,4 +54,4 @@ mtd bbox 45.9668 5.7767 48.3068 8.7167 --min-zoom 3 --max-zoom 12 --dry-run
 
 That’s all you need. Launch the TUI, pick areas, and the downloader will handle the rest.
 
-This project is created and maintained by [tekk](https://github.com/tekk).
+This project is created and maintained with ❤️ by [tekk](https://github.com/tekk).
