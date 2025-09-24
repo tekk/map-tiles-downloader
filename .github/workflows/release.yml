@@ -93,10 +93,11 @@ jobs:
           convert -size 256x256 xc:#2c3e50 AppDir/map-tiles-downloader.png
           printf '%s\n' "#!/bin/sh" 'HERE="$(dirname "$(readlink -f "$0")")"' 'exec "$HERE/usr/bin/map-tiles-downloader" "$@"' > AppDir/AppRun
           chmod +x AppDir/AppRun
-          wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O appimagetool
-          chmod +x appimagetool
-          APPIMAGE_EXTRACT_AND_RUN=1 ./appimagetool AppDir build-out/x86_64/map-tiles-downloader-Linux-x86_64-$ver.AppImage
-          rm -rf AppDir appimagetool
+          wget -q https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage -O appimagetool.AppImage
+          chmod +x appimagetool.AppImage
+          ./appimagetool.AppImage --appimage-extract
+          ./squashfs-root/AppRun AppDir build-out/x86_64/map-tiles-downloader-Linux-x86_64-$ver.AppImage
+          rm -rf AppDir appimagetool.AppImage squashfs-root
           # Build .deb and .rpm with fpm (x86_64/amd64)
           fpm -s dir -t deb -n map-tiles-downloader -v "$ver" --license MIT \
               --architecture amd64 --description "Download map tiles by region" \
@@ -134,10 +135,11 @@ jobs:
             convert -size 256x256 xc:#2c3e50 AppDir/map-tiles-downloader.png
             printf '%s\n' "#!/bin/sh" 'HERE="$(dirname "$(readlink -f "$0")")"' 'exec "$HERE/usr/bin/map-tiles-downloader" "$@"' > AppDir/AppRun
             chmod +x AppDir/AppRun
-            wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-aarch64.AppImage -O appimagetool
-            chmod +x appimagetool
-            APPIMAGE_EXTRACT_AND_RUN=1 ./appimagetool AppDir build-out/arm64/map-tiles-downloader-Linux-arm64-$ver.AppImage
-            rm -rf AppDir appimagetool
+            wget -q https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-aarch64.AppImage -O appimagetool.AppImage
+            chmod +x appimagetool.AppImage
+            ./appimagetool.AppImage --appimage-extract
+            ./squashfs-root/AppRun AppDir build-out/arm64/map-tiles-downloader-Linux-arm64-$ver.AppImage
+            rm -rf AppDir appimagetool.AppImage squashfs-root
             # .deb and .rpm (arm64/aarch64)
             fpm -s dir -t deb -n map-tiles-downloader -v "$ver" --license MIT \
                 --architecture arm64 --description "Download map tiles by region" \
