@@ -1,5 +1,6 @@
 import platform
 import pytest
+from pathlib import Path
 from unittest.mock import patch, MagicMock
 from map_tiles_downloader.cli import build_parser, main, _requests_for_regions
 
@@ -68,7 +69,7 @@ class TestBuildParser:
         assert args.max_zoom == 12
         assert args.provider == "osm"
         assert args.api_key == "test_key"
-        assert str(args.outdir) == "/tmp/test"
+        assert args.outdir == Path("/tmp/test")
         assert args.concurrency == 5
         assert args.max_tiles == 100
         assert args.dry_run is True
