@@ -63,96 +63,143 @@ jobs:
           path: build-out/*
 
   build-linux:
-    name: Build Linux artifacts (x64 and arm64)
-    runs-on: ubuntu-latest
+    name: Build Linux ${{ matrix.arch }} artifacts
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-latest
+            fpm_arch: amd64
+            rpm_arch: x86_64
+            appimage_arch: x86_64
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+            fpm_arch: arm64
+            rpm_arch: aarch64
+            appimage_arch: aarch64
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Install packaging tools (host x64)
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-${{ matrix.arch }}-pip-${{ hashFiles('**/requirements.txt', 'pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.arch }}-pip-
+
+      - name: Cache PyInstaller
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pyinstaller
+          key: ${{ runner.os }}-${{ matrix.arch }}-pyinstaller-${{ hashFiles('**/requirements.txt', 'pyproject.toml') }}
+
+      - name: Install system dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y ruby ruby-dev build-essential rpm wget xz-utils imagemagick
+
+      - name: Install Ruby dependencies
+        run: |
           sudo gem install --no-document fpm
-      - name: Build Linux x64 binary and packages
-        shell: bash
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build with PyInstaller
+        run: |
+          pyinstaller --onefile --name map-tiles-downloader src/map_tiles_downloader/__main__.py
+        env:
+          PYINSTALLER_CACHE_DIR: ~/.cache/pyinstaller
+
+      - name: Extract version
+        id: version
+        run: |
+          ref="${{ github.ref_name }}"
+          version="${ref#v}"
+          echo "version=$version" >> $GITHUB_OUTPUT
+
+      - name: Create output directory
+        run: mkdir -p build-out
+
+      - name: Copy binary
+        run: cp dist/map-tiles-downloader build-out/map-tiles-downloader-Linux-${{ matrix.arch }}-${{ steps.version.outputs.version }}
+
+      - name: Build AppImage
         run: |
           set -euo pipefail
-          python -m pip install --upgrade pip
-          pip install . pyinstaller
-          pyinstaller --onefile --name map-tiles-downloader src/map_tiles_downloader/__main__.py
-          rel="${{ github.ref_name }}"; ver="${rel#v}"
-          mkdir -p build-out/x86_64
-          # Rename binary
-          cp dist/map-tiles-downloader build-out/x86_64/map-tiles-downloader-Linux-x86_64-$ver
-          # Build AppImage (x86_64)
+
+          # Create AppDir structure
           mkdir -p AppDir/usr/bin
           cp dist/map-tiles-downloader AppDir/usr/bin/map-tiles-downloader
-          printf '%s\n' "[Desktop Entry]" "Name=Map Tiles Downloader" "Exec=map-tiles-downloader" "Terminal=true" "Type=Application" "Categories=Utility;" "Icon=map-tiles-downloader" > AppDir/map-tiles-downloader.desktop
+
+          # Create desktop file
+          cat > AppDir/map-tiles-downloader.desktop << 'EOF'
+          [Desktop Entry]
+          Name=Map Tiles Downloader
+          Exec=map-tiles-downloader
+          Terminal=true
+          Type=Application
+          Categories=Utility;
+          Icon=map-tiles-downloader
+          EOF
+
+          # Create icon
           convert -size 256x256 xc:#2c3e50 AppDir/map-tiles-downloader.png
-          printf '%s\n' "#!/bin/sh" 'HERE="$(dirname "$(readlink -f "$0")")"' 'exec "$HERE/usr/bin/map-tiles-downloader" "$@"' > AppDir/AppRun
+
+          # Create AppRun script
+          cat > AppDir/AppRun << 'EOF'
+          #!/bin/sh
+          HERE="$(dirname "$(readlink -f "$0")")"
+          exec "$HERE/usr/bin/map-tiles-downloader" "$@"
+          EOF
           chmod +x AppDir/AppRun
-          wget -q https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage -O appimagetool.AppImage
+
+          # Download and run appimagetool
+          wget -q "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-${{ matrix.appimage_arch }}.AppImage" -O appimagetool.AppImage
           chmod +x appimagetool.AppImage
           ./appimagetool.AppImage --appimage-extract
-          ./squashfs-root/AppRun AppDir build-out/x86_64/map-tiles-downloader-Linux-x86_64-$ver.AppImage
+          ./squashfs-root/AppRun AppDir "build-out/map-tiles-downloader-Linux-${{ matrix.arch }}-${{ steps.version.outputs.version }}.AppImage"
+
+          # Cleanup
           rm -rf AppDir appimagetool.AppImage squashfs-root
-          # Build .deb and .rpm with fpm (x86_64/amd64)
-          fpm -s dir -t deb -n map-tiles-downloader -v "$ver" --license MIT \
-              --architecture amd64 --description "Download map tiles by region" \
-              --package build-out/x86_64/map-tiles-downloader_${ver}_amd64.deb \
+
+      - name: Build Debian package
+        run: |
+          fpm -s dir -t deb -n map-tiles-downloader \
+              -v "${{ steps.version.outputs.version }}" \
+              --license MIT \
+              --architecture ${{ matrix.fpm_arch }} \
+              --description "Download map tiles by region" \
+              --package "build-out/map-tiles-downloader_${{ steps.version.outputs.version }}_${{ matrix.fpm_arch }}.deb" \
               dist/map-tiles-downloader=/usr/bin/map-tiles-downloader
-          fpm -s dir -t rpm -n map-tiles-downloader -v "$ver" --license MIT \
-              --architecture x86_64 --description "Download map tiles by region" \
-              --package build-out/x86_64/map-tiles-downloader-${ver}-1.x86_64.rpm \
+
+      - name: Build RPM package
+        run: |
+          fpm -s dir -t rpm -n map-tiles-downloader \
+              -v "${{ steps.version.outputs.version }}" \
+              --license MIT \
+              --architecture ${{ matrix.rpm_arch }} \
+              --description "Download map tiles by region" \
+              --package "build-out/map-tiles-downloader-${{ steps.version.outputs.version }}-1.${{ matrix.rpm_arch }}.rpm" \
               dist/map-tiles-downloader=/usr/bin/map-tiles-downloader
-      - name: Build Linux arm64 binary and packages (QEMU)
-        if: ${{ github.actor != 'nektos/act' }}
-        uses: uraimo/run-on-arch-action@v2
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
         with:
-          arch: aarch64
-          distro: ubuntu22.04
-          githubToken: ${{ github.token }}
-          install: |
-            apt-get update
-            DEBIAN_FRONTEND=noninteractive apt-get install -y python3 python3-venv python3-pip python3-dev ruby ruby-dev build-essential rpm wget xz-utils imagemagick
-            gem install --no-document fpm
-          run: |
-            set -euo pipefail
-            python3 -m venv .venv
-            . .venv/bin/activate
-            python -m pip install --upgrade pip
-            pip install . pyinstaller
-            pyinstaller --onefile --name map-tiles-downloader src/map_tiles_downloader/__main__.py
-            rel="${{ github.ref_name }}"; ver="${rel#v}"
-            mkdir -p build-out/arm64
-            cp dist/map-tiles-downloader build-out/arm64/map-tiles-downloader-Linux-arm64-$ver
-            # AppImage (arm64)
-            mkdir -p AppDir/usr/bin
-            cp dist/map-tiles-downloader AppDir/usr/bin/map-tiles-downloader
-            printf '%s\n' "[Desktop Entry]" "Name=Map Tiles Downloader" "Exec=map-tiles-downloader" "Terminal=true" "Type=Application" "Categories=Utility;" "Icon=map-tiles-downloader" > AppDir/map-tiles-downloader.desktop
-            convert -size 256x256 xc:#2c3e50 AppDir/map-tiles-downloader.png
-            printf '%s\n' "#!/bin/sh" 'HERE="$(dirname "$(readlink -f "$0")")"' 'exec "$HERE/usr/bin/map-tiles-downloader" "$@"' > AppDir/AppRun
-            chmod +x AppDir/AppRun
-            wget -q https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-aarch64.AppImage -O appimagetool.AppImage
-            chmod +x appimagetool.AppImage
-            ./appimagetool.AppImage --appimage-extract
-            ./squashfs-root/AppRun AppDir build-out/arm64/map-tiles-downloader-Linux-arm64-$ver.AppImage
-            rm -rf AppDir appimagetool.AppImage squashfs-root
-            # .deb and .rpm (arm64/aarch64)
-            fpm -s dir -t deb -n map-tiles-downloader -v "$ver" --license MIT \
-                --architecture arm64 --description "Download map tiles by region" \
-                --package build-out/arm64/map-tiles-downloader_${ver}_arm64.deb \
-                dist/map-tiles-downloader=/usr/bin/map-tiles-downloader
-            fpm -s dir -t rpm -n map-tiles-downloader -v "$ver" --license MIT \
-                --architecture aarch64 --description "Download map tiles by region" \
-                --package build-out/arm64/map-tiles-downloader-${ver}-1.aarch64.rpm \
-                dist/map-tiles-downloader=/usr/bin/map-tiles-downloader
-      - uses: actions/upload-artifact@v4
-        with:
-          name: linux-artifacts
-          path: build-out/**/*
+          name: linux-${{ matrix.arch }}-artifacts
+          path: build-out/*
 
   build-packages:
     name: Build sdist and wheel

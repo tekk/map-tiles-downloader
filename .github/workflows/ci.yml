@@ -7,25 +7,57 @@ on:
     branches: [ main, master ]
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  test:
+    name: Test Python ${{ matrix.python-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ['3.9', '3.10', '3.11']
+        exclude:
+          # Reduce matrix size by excluding some combinations
+          - os: windows-latest
+            python-version: '3.9'
+          - os: macos-latest
+            python-version: '3.9'
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-py${{ matrix.python-version }}-pip-${{ hashFiles('**/requirements.txt', 'pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-py${{ matrix.python-version }}-pip-
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install -e .
           pip install pytest ruff mypy types-aiofiles types-tqdm
-      - name: Ruff
+
+      - name: Lint with Ruff
         run: ruff check .
         continue-on-error: true
-      - name: Mypy
+
+      - name: Type check with MyPy
         run: mypy src
         continue-on-error: true
-      - name: Test
-        run: pytest -q
+
+      - name: Run tests
+        run: pytest -q --tb=short
+
+      - name: Test CLI entry point
+        run: |
+          map-tiles-downloader --help
+          mtd --help
 
