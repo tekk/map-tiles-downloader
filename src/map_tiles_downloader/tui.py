@@ -272,19 +272,20 @@ class ProgressScreen:
             skipped_str = f"{self.skipped}"
             total_str = f"{self.total}"
 
-            self.stdscr.addstr(3, 0, "Completed: ", curses.color_pair(1))
-            self.stdscr.addstr(3, 11, completed_str, curses.color_pair(2))  # Green for completed
+            self.stdscr.addstr(3, 0, "Completed: ", curses.color_pair(7))
+            self.stdscr.addstr(3, 11, completed_str, curses.color_pair(2))
             pos = 11 + len(completed_str)
 
-            self.stdscr.addstr(3, pos, "  Failed: ", curses.color_pair(1))
-            self.stdscr.addstr(3, pos + 11, failed_str, curses.color_pair(4))  # Red for failed
+            self.stdscr.addstr(3, pos, "  Failed: ", curses.color_pair(7))
+            self.stdscr.addstr(3, pos + 11, failed_str, curses.color_pair(4))
             pos += 11 + len(failed_str)
 
-            self.stdscr.addstr(3, pos, "  Skipped: ", curses.color_pair(1))
-            self.stdscr.addstr(3, pos + 12, skipped_str, curses.color_pair(3))  # Yellow for skipped
+            self.stdscr.addstr(3, pos, "  Skipped: ", curses.color_pair(7))
+            self.stdscr.addstr(3, pos + 12, skipped_str, curses.color_pair(3))
             pos += 12 + len(skipped_str)
 
-            self.stdscr.addstr(3, pos, f"  Total: {total_str}", curses.color_pair(1))
+            self.stdscr.addstr(3, pos, "  Total: ", curses.color_pair(7))
+            self.stdscr.addstr(3, pos + 9, total_str, curses.color_pair(3) | curses.A_BOLD)
         else:
             self.stdscr.addstr(3, 0, f"Completed: {self.completed}  Failed: {self.failed}  Skipped: {self.skipped}  Total: {self.total}")
 
@@ -293,18 +294,18 @@ class ProgressScreen:
             rate_str = f"{rate:.1f} tiles/s"
             eta_str = f"{eta_min}m {eta_s}s"
 
-            self.stdscr.addstr(4, 0, "Rate: ", curses.color_pair(1))
-            self.stdscr.addstr(4, 6, rate_str, curses.color_pair(5))  # Blue for rate
-            self.stdscr.addstr(4, 6 + len(rate_str), "   ETA: ", curses.color_pair(1))
-            self.stdscr.addstr(4, 6 + len(rate_str) + 8, eta_str, curses.color_pair(6))  # Magenta for ETA
+            self.stdscr.addstr(4, 0, "Rate: ", curses.color_pair(7) | curses.A_BOLD)
+            self.stdscr.addstr(4, 6, rate_str, curses.color_pair(3) | curses.A_BOLD)
+            self.stdscr.addstr(4, 6 + len(rate_str), "   ETA: ", curses.color_pair(7) | curses.A_BOLD)
+            self.stdscr.addstr(4, 6 + len(rate_str) + 8, eta_str, curses.color_pair(5) | curses.A_BOLD)
         else:
             self.stdscr.addstr(4, 0, f"Rate: {rate:.1f} tiles/s   ETA: {eta_min}m {eta_s}s")
 
         # Disk stats with colors
         if self.colors_enabled and curses.has_colors():
             downloaded_str = human_bytes(self.bytes_downloaded)
-            self.stdscr.addstr(5, 0, "Downloaded: ", curses.color_pair(1))
-            self.stdscr.addstr(5, 12, downloaded_str, curses.color_pair(2))  # Green for downloaded
+            self.stdscr.addstr(5, 0, "Downloaded: ", curses.color_pair(6) | curses.A_BOLD)
+            self.stdscr.addstr(5, 12, downloaded_str, curses.color_pair(2) | curses.A_BOLD)
         else:
             self.stdscr.addstr(5, 0, f"Downloaded: {human_bytes(self.bytes_downloaded)}")
 
@@ -315,11 +316,11 @@ class ProgressScreen:
             est_size_str = human_bytes(est_total_bytes)
             outdir_str = str(self.outdir)
 
-            self.stdscr.addstr(6, 0, "Estimated final size: ", curses.color_pair(1))
-            self.stdscr.addstr(6, 22, est_size_str, curses.color_pair(5))  # Blue for estimated
+            self.stdscr.addstr(6, 0, "Estimated final size: ", curses.color_pair(7))
+            self.stdscr.addstr(6, 22, est_size_str, curses.color_pair(3))
             pos = 22 + len(est_size_str)
             self.stdscr.addstr(6, pos, "  Out: ", curses.color_pair(1))
-            self.stdscr.addstr(6, pos + 7, outdir_str, curses.color_pair(6))  # Magenta for output dir
+            self.stdscr.addstr(6, pos + 7, outdir_str, curses.color_pair(6))
         else:
             self.stdscr.addstr(
                 6, 0, f"Estimated final size: {human_bytes(est_total_bytes)}  Out: {str(self.outdir)}"
@@ -374,6 +375,7 @@ def tui_main(stdscr: Any, colors_enabled: bool = True) -> int:
         curses.init_pair(4, curses.COLOR_RED, -1)       # Error/warning color
         curses.init_pair(5, curses.COLOR_BLUE, -1)      # Progress/info color
         curses.init_pair(6, curses.COLOR_MAGENTA, -1)   # Status color
+        curses.init_pair(7, curses.COLOR_WHITE, -1)     # White captions
 
     catalog = load_region_catalog()
 
