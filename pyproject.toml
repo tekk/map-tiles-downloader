@@ -68,6 +68,8 @@ module = [
   "aiofiles",
   "tqdm",
   "fastkml",
+  "fastkml.utils",
+  "aiohttp",
   "questionary",
   "curses",
 ]
