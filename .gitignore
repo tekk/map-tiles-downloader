@@ -92,6 +92,9 @@ logs/
 .dmypy.json
 dmypy.json
 
+# Ruff
+.ruff_cache/
+
 # Pyre type checker
 .pyre/
 
@@ -100,4 +103,24 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+# Additional IDEs
+*.code-workspace
+.history/
+
+# Local development
+.cache/
+.tox/
+
+# Documentation builds
+docs/_build/
+site/
+
+# Map tile outputs (various naming patterns)
+maps/
+tiles/
+downloads/
+output/
+map_tiles/
+*.mbtiles
 
