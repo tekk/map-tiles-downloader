@@ -9,6 +9,14 @@ This app helps you fetch map tiles quickly, for offline use. You can pick places
 [![PyPI - Python Version](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
+![Map Tiles Downloader - screenshot](img/screenshot.png)
+
+## Download
+
+Download the installer/pre-compiled binaries from the Github [Releases](https://github.com/tekk/map-tiles-downloader/releases) page.
+
+## Source code
+
 The source code lives in the GitHub repository: [tekk/map-tiles-downloader](https://github.com/tekk/map-tiles-downloader).
 
 ### If you want to compile yourself
@@ -27,8 +35,6 @@ pip install -r requirements.txt
 pip install -e .
 mtd tui
 ```
-
-[![asciicast](https://asciinema.org/a/9xSAZNvP6PCDkvBfKqDlJtnVv.svg)](https://asciinema.org/a/9xSAZNvP6PCDkvBfKqDlJtnVv)
 
 If you prefer commands instead of the guided interface, you can use direct subcommands. Bounding box mode lets you fetch tiles for a given rectangle. KML mode expands points and routes into small areas around each location.
 
@@ -54,4 +60,4 @@ mtd bbox 45.9668 5.7767 48.3068 8.7167 --min-zoom 3 --max-zoom 12 --dry-run
 
 That’s all you need. Launch the TUI, pick areas, and the downloader will handle the rest.
 
-This project is created and maintained with ❤️ by [tekk](https://github.com/tekk).
+This project is created and maintained with :heart: by [tekk](https://github.com/tekk).
