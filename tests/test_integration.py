@@ -16,13 +16,24 @@ class TestCLIIntegration:
             output_dir = Path(tmpdir)
 
             # Run bbox command with dry-run (use osm provider to avoid API key requirement)
-            result = subprocess.run([
-                "map-tiles-downloader",
-                "bbox", "0", "0", "0.001", "0.001",
-                "--provider", "osm",
-                "--dry-run",
-                "--outdir", str(output_dir)
-            ], capture_output=True, text=True, cwd=Path.cwd())
+            result = subprocess.run(
+                [
+                    "map-tiles-downloader",
+                    "bbox",
+                    "0",
+                    "0",
+                    "0.001",
+                    "0.001",
+                    "--provider",
+                    "osm",
+                    "--dry-run",
+                    "--outdir",
+                    str(output_dir),
+                ],
+                capture_output=True,
+                text=True,
+                cwd=Path.cwd(),
+            )
 
             assert result.returncode == 0
             assert "Planned tiles:" in result.stdout
@@ -35,23 +46,36 @@ class TestCLIIntegration:
             output_dir = Path(tmpdir)
 
             # Run bbox command with OSM provider (no API key needed)
-            result = subprocess.run([
-                "map-tiles-downloader",
-                "bbox", "0", "0", "0.001", "0.001",
-                "--provider", "osm",
-                "--dry-run",
-                "--outdir", str(output_dir)
-            ], capture_output=True, text=True, cwd=Path.cwd())
+            result = subprocess.run(
+                [
+                    "map-tiles-downloader",
+                    "bbox",
+                    "0",
+                    "0",
+                    "0.001",
+                    "0.001",
+                    "--provider",
+                    "osm",
+                    "--dry-run",
+                    "--outdir",
+                    str(output_dir),
+                ],
+                capture_output=True,
+                text=True,
+                cwd=Path.cwd(),
+            )
 
             assert result.returncode == 0
             assert "Planned tiles:" in result.stdout
 
     def test_list_providers_command(self):
         """Test list providers command"""
-        result = subprocess.run([
-            "map-tiles-downloader",
-            "list", "providers"
-        ], capture_output=True, text=True, cwd=Path.cwd())
+        result = subprocess.run(
+            ["map-tiles-downloader", "list", "providers"],
+            capture_output=True,
+            text=True,
+            cwd=Path.cwd(),
+        )
 
         assert result.returncode == 0
         assert "thunderforest" in result.stdout
@@ -60,10 +84,12 @@ class TestCLIIntegration:
 
     def test_list_regions_command(self):
         """Test list regions command"""
-        result = subprocess.run([
-            "map-tiles-downloader",
-            "list", "regions"
-        ], capture_output=True, text=True, cwd=Path.cwd())
+        result = subprocess.run(
+            ["map-tiles-downloader", "list", "regions"],
+            capture_output=True,
+            text=True,
+            cwd=Path.cwd(),
+        )
 
         assert result.returncode == 0
         assert "Europe" in result.stdout
@@ -72,30 +98,33 @@ class TestCLIIntegration:
 
     def test_invalid_command(self):
         """Test invalid command returns error"""
-        result = subprocess.run([
-            "map-tiles-downloader",
-            "invalid_command"
-        ], capture_output=True, text=True, cwd=Path.cwd())
+        result = subprocess.run(
+            ["map-tiles-downloader", "invalid_command"],
+            capture_output=True,
+            text=True,
+            cwd=Path.cwd(),
+        )
 
         assert result.returncode != 0
         assert "invalid choice" in result.stderr or "error:" in result.stderr
 
     def test_bbox_missing_coordinates(self):
         """Test bbox command with missing coordinates"""
-        result = subprocess.run([
-            "map-tiles-downloader",
-            "bbox"
-        ], capture_output=True, text=True, cwd=Path.cwd())
+        result = subprocess.run(
+            ["map-tiles-downloader", "bbox"], capture_output=True, text=True, cwd=Path.cwd()
+        )
 
         assert result.returncode != 0
         assert "error:" in result.stderr or "the following arguments are required:" in result.stderr
 
     def test_kml_command_missing_file(self):
         """Test kml command with missing file"""
-        result = subprocess.run([
-            "map-tiles-downloader",
-            "kml", "nonexistent.kml"
-        ], capture_output=True, text=True, cwd=Path.cwd())
+        result = subprocess.run(
+            ["map-tiles-downloader", "kml", "nonexistent.kml"],
+            capture_output=True,
+            text=True,
+            cwd=Path.cwd(),
+        )
 
         assert result.returncode != 0
         assert "error:" in result.stderr or "No such file" in result.stderr
@@ -106,7 +135,7 @@ class TestKMLIntegration:
 
     def test_kml_command_with_valid_file(self):
         """Test KML command with a valid KML file"""
-        kml_content = '''<?xml version="1.0" encoding="UTF-8"?>
+        kml_content = """<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
   <Document>
     <Placemark>
@@ -116,27 +145,35 @@ class TestKMLIntegration:
       </Point>
     </Placemark>
   </Document>
-</kml>'''
+</kml>"""
 
         with tempfile.TemporaryDirectory() as tmpdir:
             kml_file = Path(tmpdir) / "test.kml"
             kml_file.write_text(kml_content)
             output_dir = Path(tmpdir) / "output"
 
-            result = subprocess.run([
-                "map-tiles-downloader",
-                "kml", str(kml_file),
-                "--provider", "osm",
-                "--dry-run",
-                "--outdir", str(output_dir)
-            ], capture_output=True, text=True, cwd=Path.cwd())
+            result = subprocess.run(
+                [
+                    "map-tiles-downloader",
+                    "kml",
+                    str(kml_file),
+                    "--provider",
+                    "osm",
+                    "--dry-run",
+                    "--outdir",
+                    str(output_dir),
+                ],
+                capture_output=True,
+                text=True,
+                cwd=Path.cwd(),
+            )
 
             assert result.returncode == 0
             assert "Planned tiles:" in result.stdout
 
     def test_kml_command_with_linestring(self):
         """Test KML command with LineString geometry"""
-        kml_content = '''<?xml version="1.0" encoding="UTF-8"?>
+        kml_content = """<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
   <Document>
     <Placemark>
@@ -149,25 +186,33 @@ class TestKMLIntegration:
       </LineString>
     </Placemark>
   </Document>
-</kml>'''
+</kml>"""
 
         with tempfile.TemporaryDirectory() as tmpdir:
             kml_file = Path(tmpdir) / "test.kml"
             kml_file.write_text(kml_content)
             output_dir = Path(tmpdir) / "output"
 
-            result = subprocess.run([
-                "map-tiles-downloader",
-                "kml", str(kml_file),
-                "--provider", "osm",
-                "--dry-run",
-                "--outdir", str(output_dir)
-            ], capture_output=True, text=True, cwd=Path.cwd())
+            result = subprocess.run(
+                [
+                    "map-tiles-downloader",
+                    "kml",
+                    str(kml_file),
+                    "--provider",
+                    "osm",
+                    "--dry-run",
+                    "--outdir",
+                    str(output_dir),
+                ],
+                capture_output=True,
+                text=True,
+                cwd=Path.cwd(),
+            )
 
             assert result.returncode == 0
             assert "Planned tiles:" in result.stdout
             # Should have created multiple regions from the linestring
-            output_lines = result.stdout.strip().split('\n')
+            output_lines = result.stdout.strip().split("\n")
             tiles_line = [line for line in output_lines if "Planned tiles:" in line]
             assert tiles_line
 
@@ -180,19 +225,34 @@ class TestProviderIntegration:
         with tempfile.TemporaryDirectory() as tmpdir:
             output_dir = Path(tmpdir)
 
-            result = subprocess.run([
-                "map-tiles-downloader",
-                "bbox", "0", "0", "0.001", "0.001",
-                "--provider", "thunderforest",
-                "--dry-run",
-                "--outdir", str(output_dir)
-            ], capture_output=True, text=True, cwd=Path.cwd())
+            result = subprocess.run(
+                [
+                    "map-tiles-downloader",
+                    "bbox",
+                    "0",
+                    "0",
+                    "0.001",
+                    "0.001",
+                    "--provider",
+                    "thunderforest",
+                    "--dry-run",
+                    "--outdir",
+                    str(output_dir),
+                ],
+                capture_output=True,
+                text=True,
+                cwd=Path.cwd(),
+            )
 
             # Should fail because no API key provided
             assert result.returncode != 0
             # Check stderr for API key error message
             stderr_content = result.stderr.lower()
-            assert "api-key" in stderr_content or "api key" in stderr_content or "thunderforest" in stderr_content
+            assert (
+                "api-key" in stderr_content
+                or "api key" in stderr_content
+                or "thunderforest" in stderr_content
+            )
 
     def test_thunderforest_provider_with_api_key(self):
         """Test Thunderforest provider with API key"""
@@ -203,13 +263,25 @@ class TestProviderIntegration:
             env = os.environ.copy()
             env["THUNDERFOREST_API_KEY"] = "fake_key"
 
-            result = subprocess.run([
-                "map-tiles-downloader",
-                "bbox", "0", "0", "0.001", "0.001",
-                "--provider", "thunderforest",
-                "--dry-run",
-                "--outdir", str(output_dir)
-            ], capture_output=True, text=True, cwd=Path.cwd(), env=env)
+            result = subprocess.run(
+                [
+                    "map-tiles-downloader",
+                    "bbox",
+                    "0",
+                    "0",
+                    "0.001",
+                    "0.001",
+                    "--provider",
+                    "thunderforest",
+                    "--dry-run",
+                    "--outdir",
+                    str(output_dir),
+                ],
+                capture_output=True,
+                text=True,
+                cwd=Path.cwd(),
+                env=env,
+            )
 
             assert result.returncode == 0
             assert "Planned tiles:" in result.stdout
@@ -223,15 +295,28 @@ class TestErrorHandlingIntegration:
         with tempfile.TemporaryDirectory() as tmpdir:
             output_dir = Path(tmpdir)
 
-            result = subprocess.run([
-                "map-tiles-downloader",
-                "bbox", "0", "0", "0.001", "0.001",
-                "--provider", "osm",
-                "--min-zoom", "20",  # Invalid zoom level
-                "--max-zoom", "25",  # Invalid zoom level
-                "--dry-run",
-                "--outdir", str(output_dir)
-            ], capture_output=True, text=True, cwd=Path.cwd())
+            result = subprocess.run(
+                [
+                    "map-tiles-downloader",
+                    "bbox",
+                    "0",
+                    "0",
+                    "0.001",
+                    "0.001",
+                    "--provider",
+                    "osm",
+                    "--min-zoom",
+                    "20",  # Invalid zoom level
+                    "--max-zoom",
+                    "25",  # Invalid zoom level
+                    "--dry-run",
+                    "--outdir",
+                    str(output_dir),
+                ],
+                capture_output=True,
+                text=True,
+                cwd=Path.cwd(),
+            )
 
             # Should still work but might produce 0 tiles
             assert result.returncode == 0
@@ -242,15 +327,26 @@ class TestErrorHandlingIntegration:
         with tempfile.TemporaryDirectory() as tmpdir:
             output_dir = Path(tmpdir)
 
-            result = subprocess.run([
-                "map-tiles-downloader",
-                "bbox", "0", "0", "0.001", "0.001",
-                "--provider", "osm",
-                "--concurrency", "1",
-                "--dry-run",
-                "--outdir", str(output_dir)
-            ], capture_output=True, text=True, cwd=Path.cwd())
+            result = subprocess.run(
+                [
+                    "map-tiles-downloader",
+                    "bbox",
+                    "0",
+                    "0",
+                    "0.001",
+                    "0.001",
+                    "--provider",
+                    "osm",
+                    "--concurrency",
+                    "1",
+                    "--dry-run",
+                    "--outdir",
+                    str(output_dir),
+                ],
+                capture_output=True,
+                text=True,
+                cwd=Path.cwd(),
+            )
 
             assert result.returncode == 0
             assert "Planned tiles:" in result.stdout
-
