@@ -11,7 +11,7 @@ if SCRIPT_PATH is None:
     # Fallback: try to find it relative to the Python executable
     SCRIPT_PATH = os.path.join(os.path.dirname(sys.executable), "map-tiles-downloader")
     # On Windows, scripts might be in Scripts subdirectory
-    if not os.path.exists(SCRIPT_PATH) and os.name == 'nt':
+    if not os.path.exists(SCRIPT_PATH) and os.name == "nt":
         scripts_dir = os.path.join(os.path.dirname(sys.executable), "Scripts")
         SCRIPT_PATH = os.path.join(scripts_dir, "map-tiles-downloader.exe")
 
