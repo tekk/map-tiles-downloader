@@ -70,7 +70,8 @@ class Menu:
                 country = choice.split(" / ")[0]
                 country_prefix = f"{country} / "
                 all_country_items = [
-                    i for i, c in enumerate(self.choices)
+                    i
+                    for i, c in enumerate(self.choices)
                     if c.startswith(country_prefix) and c != choice
                 ]
                 if all_country_items:
@@ -89,7 +90,9 @@ class Menu:
             self.stdscr.addstr(0, 0, self.title[: max_x - 1])
 
         if self.allow_back:
-            help_line = "SPACE select, ENTER confirm, j/k or arrows to move, b to go back, q to quit"
+            help_line = (
+                "SPACE select, ENTER confirm, j/k or arrows to move, b to go back, q to quit"
+            )
         else:
             help_line = "SPACE select, ENTER confirm, j/k or arrows to move, q to quit"
         self.stdscr.addstr(1, 0, help_line[: max_x - 1])
@@ -174,7 +177,8 @@ class Menu:
                         country = choice.split(" / ")[0]
                         country_prefix = f"{country} / "
                         all_country_items = [
-                            i for i, c in enumerate(self.choices)
+                            i
+                            for i, c in enumerate(self.choices)
                             if c.startswith(country_prefix) and c != choice
                         ]
                         # Check if all are currently selected
@@ -248,7 +252,12 @@ class ProgressScreen:
 
         # Title with color
         if self.colors_enabled and curses.has_colors():
-            self.stdscr.addstr(0, 0, "Downloading tiles  [q: cancel] [p: pause/resume]", curses.color_pair(1) | curses.A_BOLD)
+            self.stdscr.addstr(
+                0,
+                0,
+                "Downloading tiles  [q: cancel] [p: pause/resume]",
+                curses.color_pair(1) | curses.A_BOLD,
+            )
         else:
             self.stdscr.addstr(0, 0, "Downloading tiles  [q: cancel] [p: pause/resume]")
 
@@ -287,7 +296,11 @@ class ProgressScreen:
             self.stdscr.addstr(3, pos, "  Total: ", curses.color_pair(7))
             self.stdscr.addstr(3, pos + 9, total_str, curses.color_pair(3) | curses.A_BOLD)
         else:
-            self.stdscr.addstr(3, 0, f"Completed: {self.completed}  Failed: {self.failed}  Skipped: {self.skipped}  Total: {self.total}")
+            self.stdscr.addstr(
+                3,
+                0,
+                f"Completed: {self.completed}  Failed: {self.failed}  Skipped: {self.skipped}  Total: {self.total}",
+            )
 
         # Rate and ETA with colors
         if self.colors_enabled and curses.has_colors():
@@ -296,8 +309,12 @@ class ProgressScreen:
 
             self.stdscr.addstr(4, 0, "Rate: ", curses.color_pair(7) | curses.A_BOLD)
             self.stdscr.addstr(4, 6, rate_str, curses.color_pair(3) | curses.A_BOLD)
-            self.stdscr.addstr(4, 6 + len(rate_str), "   ETA: ", curses.color_pair(7) | curses.A_BOLD)
-            self.stdscr.addstr(4, 6 + len(rate_str) + 8, eta_str, curses.color_pair(5) | curses.A_BOLD)
+            self.stdscr.addstr(
+                4, 6 + len(rate_str), "   ETA: ", curses.color_pair(7) | curses.A_BOLD
+            )
+            self.stdscr.addstr(
+                4, 6 + len(rate_str) + 8, eta_str, curses.color_pair(5) | curses.A_BOLD
+            )
         else:
             self.stdscr.addstr(4, 0, f"Rate: {rate:.1f} tiles/s   ETA: {eta_min}m {eta_s}s")
 
@@ -323,22 +340,32 @@ class ProgressScreen:
             self.stdscr.addstr(6, pos + 7, outdir_str, curses.color_pair(6))
         else:
             self.stdscr.addstr(
-                6, 0, f"Estimated final size: {human_bytes(est_total_bytes)}  Out: {str(self.outdir)}"
+                6,
+                0,
+                f"Estimated final size: {human_bytes(est_total_bytes)}  Out: {str(self.outdir)}",
             )
 
         # Status with color based on status
-        status_attr = 0
         if self.colors_enabled and curses.has_colors():
-            if "Completed" in self.status:
+            # Status label in bright white
+            self.stdscr.addstr(8, 0, "Status: ", curses.color_pair(8) | curses.A_BOLD)
+
+            # Status value with appropriate color
+            status_attr = 0
+            if "Running" in self.status:
+                status_attr = curses.color_pair(9) | curses.A_BOLD  # Bright green for running
+            elif "Completed" in self.status:
                 status_attr = curses.color_pair(2)  # Green for completed
             elif "Cancelled" in self.status or "Failed" in self.status:
                 status_attr = curses.color_pair(4)  # Red for cancelled/failed
             elif "Paused" in self.status:
                 status_attr = curses.color_pair(3)  # Yellow for paused
             else:
-                status_attr = curses.color_pair(5)  # Blue for running
+                status_attr = curses.color_pair(5)  # Blue for other statuses
 
-        self.stdscr.addstr(8, 0, f"Status: {self.status}", status_attr)
+            self.stdscr.addstr(8, 8, self.status, status_attr)
+        else:
+            self.stdscr.addstr(8, 0, f"Status: {self.status}")
 
         if self.current_area:
             if self.colors_enabled and curses.has_colors():
@@ -368,14 +395,17 @@ def tui_main(stdscr: Any, colors_enabled: bool = True) -> int:
         curses.start_color()
         curses.use_default_colors()
 
-        # Define color pairs
-        curses.init_pair(1, curses.COLOR_CYAN, -1)      # Title/header color
-        curses.init_pair(2, curses.COLOR_GREEN, -1)     # Selected item color
-        curses.init_pair(3, curses.COLOR_YELLOW, -1)    # Current cursor color
-        curses.init_pair(4, curses.COLOR_RED, -1)       # Error/warning color
-        curses.init_pair(5, curses.COLOR_BLUE, -1)      # Progress/info color
-        curses.init_pair(6, curses.COLOR_MAGENTA, -1)   # Status color
-        curses.init_pair(7, curses.COLOR_WHITE, -1)     # White captions
+        # Define color pairs that work well on both light and dark terminal backgrounds
+        # Using colors that provide good contrast regardless of background
+        curses.init_pair(1, curses.COLOR_CYAN, -1)  # Title/header color (cyan works on both)
+        curses.init_pair(2, curses.COLOR_GREEN, -1)  # Selected item color (green works on both)
+        curses.init_pair(3, curses.COLOR_YELLOW, -1)  # Current cursor color (yellow works on both)
+        curses.init_pair(4, curses.COLOR_RED, -1)  # Error/warning color (red works on both)
+        curses.init_pair(5, curses.COLOR_MAGENTA, -1)  # Progress/info color (magenta works on both)
+        curses.init_pair(6, curses.COLOR_MAGENTA, -1)  # Status color (magenta works on both)
+        curses.init_pair(7, curses.COLOR_CYAN, -1)  # Captions (cyan for better visibility than white)
+        curses.init_pair(8, curses.COLOR_CYAN, -1)  # Status label (cyan for consistency)
+        curses.init_pair(9, curses.COLOR_GREEN, -1)  # Bright green (for Running status)
 
     catalog = load_region_catalog()
 
@@ -427,7 +457,9 @@ def tui_main(stdscr: Any, colors_enabled: bool = True) -> int:
 
             # States selection loop
             while True:
-                state_items: List[Tuple[str, Tuple[str, str, str]]] = []  # (label, (continent, country, state))
+                state_items: List[Tuple[str, Tuple[str, str, str]]] = (
+                    []
+                )  # (label, (continent, country, state))
                 for cont, country in selected_pairs:
                     for state in catalog[cont][country].keys():
                         state_items.append((f"{country} / {state}", (cont, country, state)))
@@ -460,7 +492,14 @@ def tui_main(stdscr: Any, colors_enabled: bool = True) -> int:
                 # Provider selection loop
                 while True:
                     providers = list(PROVIDERS.keys())
-                    sel = Menu(stdscr, "Select map provider", providers, multi=False, colors_enabled=colors_enabled, allow_back=True).run()
+                    sel = Menu(
+                        stdscr,
+                        "Select map provider",
+                        providers,
+                        multi=False,
+                        colors_enabled=colors_enabled,
+                        allow_back=True,
+                    ).run()
                     if sel == [-1]:  # Back to states
                         break
                     if not sel:
@@ -473,7 +512,14 @@ def tui_main(stdscr: Any, colors_enabled: bool = True) -> int:
                     if provider.styles:
                         while True:
                             styles = provider.styles
-                            sel = Menu(stdscr, "Select provider style", styles, multi=False, colors_enabled=colors_enabled, allow_back=True).run()
+                            sel = Menu(
+                                stdscr,
+                                "Select provider style",
+                                styles,
+                                multi=False,
+                                colors_enabled=colors_enabled,
+                                allow_back=True,
+                            ).run()
                             if sel == [-1]:  # Back to provider
                                 break
                             if not sel:
@@ -507,7 +553,12 @@ def tui_main(stdscr: Any, colors_enabled: bool = True) -> int:
             curses.echo()
             stdscr.clear()
             if colors_enabled and curses.has_colors():
-                stdscr.addstr(0, 0, f"Enter API key for {provider.display_name}:", curses.color_pair(1) | curses.A_BOLD)
+                stdscr.addstr(
+                    0,
+                    0,
+                    f"Enter API key for {provider.display_name}:",
+                    curses.color_pair(1) | curses.A_BOLD,
+                )
             else:
                 stdscr.addstr(0, 0, f"Enter API key for {provider.display_name}:")
             stdscr.refresh()
@@ -521,9 +572,16 @@ def tui_main(stdscr: Any, colors_enabled: bool = True) -> int:
         min_zoom_s = _safe_getstr(stdscr, 0, 22, 4, default="3")
         stdscr.addstr(1, 0, "Max zoom (default 12):", curses.color_pair(1) | curses.A_BOLD)
         max_zoom_s = _safe_getstr(stdscr, 1, 23, 4, default="12")
-        stdscr.addstr(2, 0, "Output directory (default ~/tiles):", curses.color_pair(1) | curses.A_BOLD)
+        stdscr.addstr(
+            2, 0, "Output directory (default ~/tiles):", curses.color_pair(1) | curses.A_BOLD
+        )
         outdir_s = _safe_getstr(stdscr, 2, 34, 256, default=os.path.expanduser("~/tiles"))
-        stdscr.addstr(3, 0, f"Concurrency (default {provider.default_concurrency}):", curses.color_pair(1) | curses.A_BOLD)
+        stdscr.addstr(
+            3,
+            0,
+            f"Concurrency (default {provider.default_concurrency}):",
+            curses.color_pair(1) | curses.A_BOLD,
+        )
     else:
         stdscr.addstr(0, 0, "Min zoom (default 3):")
         min_zoom_s = _safe_getstr(stdscr, 0, 22, 4, default="3")
@@ -554,9 +612,15 @@ def tui_main(stdscr: Any, colors_enabled: bool = True) -> int:
     stdscr.clear()
     if colors_enabled and curses.has_colors():
         stdscr.addstr(0, 0, f"Planned tiles: {total}", curses.color_pair(5) | curses.A_BOLD)
-        stdscr.addstr(1, 0, f"Estimated average tile size: {human_bytes(int(est_avg))}", curses.color_pair(5))
-        stdscr.addstr(2, 0, f"Estimated final size: {human_bytes(int(est_avg * total))}", curses.color_pair(5))
-        stdscr.addstr(4, 0, "Press ENTER to start, q to cancel", curses.color_pair(2) | curses.A_BOLD)
+        stdscr.addstr(
+            1, 0, f"Estimated average tile size: {human_bytes(int(est_avg))}", curses.color_pair(5)
+        )
+        stdscr.addstr(
+            2, 0, f"Estimated final size: {human_bytes(int(est_avg * total))}", curses.color_pair(5)
+        )
+        stdscr.addstr(
+            4, 0, "Press ENTER to start, q to cancel", curses.color_pair(2) | curses.A_BOLD
+        )
     else:
         stdscr.addstr(0, 0, f"Planned tiles: {total}")
         stdscr.addstr(1, 0, f"Estimated average tile size: {human_bytes(int(est_avg))}")

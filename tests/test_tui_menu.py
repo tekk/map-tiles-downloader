@@ -1,15 +1,15 @@
-import pytest
 from unittest.mock import Mock
 
 # Test the hierarchical selection logic in the Menu class
 # Since the Menu class requires curses stdscr, we'll test the logic indirectly
+
 
 def test_hierarchical_menu_logic():
     """Test that hierarchical selection logic works correctly"""
     # Mock curses stdscr
     stdscr = Mock()
     stdscr.getmaxyx.return_value = (24, 80)
-    stdscr.getch.return_value = ord('q')  # Quit immediately
+    stdscr.getch.return_value = ord("q")  # Quit immediately
 
     # Import after setting up mocks to avoid curses import issues
     from map_tiles_downloader.tui import Menu
@@ -22,7 +22,7 @@ def test_hierarchical_menu_logic():
         "Slovakia / Košice",
         "Czechia / All of Czechia",
         "Czechia / Prague",
-        "Czechia / Brno"
+        "Czechia / Brno",
     ]
 
     # Create menu with hierarchical selection
@@ -40,25 +40,26 @@ def test_hierarchical_menu_logic():
     menu.selected = {1: False, 2: True, 3: True, 4: False, 5: True, 6: True}
 
     # "Slovakia / All of Slovakia" should be displayed as selected since both Bratislava and Košice are selected
-    assert menu._get_display_selected(1) == True  # Slovakia / All of Slovakia
+    assert menu._get_display_selected(1)  # Slovakia / All of Slovakia
 
     # "Czechia / All of Czechia" should be displayed as selected since both Prague and Brno are selected
-    assert menu._get_display_selected(4) == True  # Czechia / All of Czechia
+    assert menu._get_display_selected(4)  # Czechia / All of Czechia
 
     # Test with partial selection
     menu.selected = {1: False, 2: True, 3: False, 4: False, 5: True, 6: False}
 
     # "Slovakia / All of Slovakia" should not be displayed as selected since only Bratislava is selected
-    assert menu._get_display_selected(1) == False  # Slovakia / All of Slovakia
+    assert not menu._get_display_selected(1)  # Slovakia / All of Slovakia
 
     # "Czechia / All of Czechia" should not be displayed as selected since only Prague is selected
-    assert menu._get_display_selected(4) == False  # Czechia / All of Czechia
+    assert not menu._get_display_selected(4)  # Czechia / All of Czechia
 
     # Test with no selection
     menu.selected = {}
 
-    assert menu._get_display_selected(1) == False
-    assert menu._get_display_selected(4) == False
+    assert not menu._get_display_selected(1)
+    assert not menu._get_display_selected(4)
+
 
 if __name__ == "__main__":
     test_hierarchical_menu_logic()

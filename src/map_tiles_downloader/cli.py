@@ -213,7 +213,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             return 0
 
     if args.command == "tui":
-        return main_tui(colors_enabled=not getattr(args, 'no_colors', False))
+        return main_tui(colors_enabled=not getattr(args, "no_colors", False))
 
     parser.print_help()
     return 1
