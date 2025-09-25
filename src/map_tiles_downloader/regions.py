@@ -34,13 +34,17 @@ def load_region_catalog() -> RegionCatalog:
     gc = geonamescache.GeonamesCache()
 
     continents = gc.get_continents()  # code -> {..., 'name': 'Europe'}
-    continent_name_by_code: Dict[str, str] = {code: data.get("name", code) for code, data in continents.items()}
+    continent_name_by_code: Dict[str, str] = {
+        code: data.get("name", code) for code, data in continents.items()
+    }
 
     countries = gc.get_countries()  # mixed-key dict; iterate values
     # Subdivisions are available only in newer geonamescache versions; fallback to empty mapping
     subdivisions_getter = getattr(gc, "get_subdivisions", None)
     subdivisions = subdivisions_getter() if callable(subdivisions_getter) else {}
-    cities = gc.get_cities()  # geonameid -> {'countrycode': 'US', 'admin1code': 'CA', 'latitude': '34.1', 'longitude': '-118.3', ...}
+    cities = (
+        gc.get_cities()
+    )  # geonameid -> {'countrycode': 'US', 'admin1code': 'CA', 'latitude': '34.1', 'longitude': '-118.3', ...}
 
     # Build city-derived admin1 bounding boxes per country
     admin1_bbox: Dict[str, Dict[str, List[float]]] = {}
@@ -72,7 +76,9 @@ def load_region_catalog() -> RegionCatalog:
         try:
             continent_code = c.get("continentcode") or "Other"
             continent_name = continent_name_by_code.get(continent_code, continent_code)
-            country_name = c.get("name") or c.get("asciiname") or c.get("iso") or c.get("iso3") or "Unknown"
+            country_name = (
+                c.get("name") or c.get("asciiname") or c.get("iso") or c.get("iso3") or "Unknown"
+            )
             iso2 = c.get("iso")  # two-letter code
 
             if continent_name not in catalog:
@@ -86,7 +92,12 @@ def load_region_catalog() -> RegionCatalog:
                     key = f"{iso2}.{a1code}"
                     sub = subdivisions.get(key) if isinstance(subdivisions, dict) else None
                     state_name = (sub.get("name") if isinstance(sub, dict) else None) or a1code
-                    states[state_name] = (float(box[0]), float(box[1]), float(box[2]), float(box[3]))
+                    states[state_name] = (
+                        float(box[0]),
+                        float(box[1]),
+                        float(box[2]),
+                        float(box[3]),
+                    )
 
             # Ensure a country-wide aggregate exists
             country_box = _parse_country_bbox(c)
@@ -111,5 +122,3 @@ def load_region_catalog() -> RegionCatalog:
             continue
 
     return catalog
-
-

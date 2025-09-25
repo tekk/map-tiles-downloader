@@ -20,7 +20,9 @@ class Provider:
     build_url: Callable[[int, int, int, Optional[str], Optional[str]], str]
 
 
-def _thunderforest_url(zoom: int, x: int, y: int, style: Optional[str], api_key: Optional[str]) -> str:
+def _thunderforest_url(
+    zoom: int, x: int, y: int, style: Optional[str], api_key: Optional[str]
+) -> str:
     s = style or "neighbourhood"
     if not api_key:
         raise ValueError("Thunderforest requires an API key")
@@ -74,5 +76,3 @@ def get_url_builder(provider: Provider, api_key: Optional[str], style: Optional[
         return provider.build_url(zoom, x, y, style, api_key)
 
     return builder
-
-

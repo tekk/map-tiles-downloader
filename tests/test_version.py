@@ -7,5 +7,3 @@ def test_package_version_matches_dunder():
 
     dist_ver = version("map-tiles-downloader")
     assert mtd.__version__ == dist_ver
-
-

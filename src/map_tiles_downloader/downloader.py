@@ -50,7 +50,14 @@ class TileDownloader:
     def _tile_path(self, zoom: int, x: int, y: int) -> Path:
         return self.output_dir / str(zoom) / str(x) / f"{y}.png"
 
-    async def _download_one(self, session: aiohttp.ClientSession, semaphore: asyncio.Semaphore, req: TileRequest, pbar: Optional[tqdm], on_progress: Optional[Callable[[str, TileRequest, int], None]]) -> bool:
+    async def _download_one(
+        self,
+        session: aiohttp.ClientSession,
+        semaphore: asyncio.Semaphore,
+        req: TileRequest,
+        pbar: Optional[tqdm],
+        on_progress: Optional[Callable[[str, TileRequest, int], None]],
+    ) -> bool:
         tile_dir = self._tile_path(req.zoom, req.x, req.y).parent
         tile_path = self._tile_path(req.zoom, req.x, req.y)
 
@@ -79,7 +86,11 @@ class TileDownloader:
                         if self.cancelled:
                             return False
 
-                        async with session.get(self._tile_url(req.zoom, req.x, req.y), headers=self.headers, timeout=timeout) as response:
+                        async with session.get(
+                            self._tile_url(req.zoom, req.x, req.y),
+                            headers=self.headers,
+                            timeout=timeout,
+                        ) as response:
                             if response.status == 200:
                                 content = await response.read()
                                 async with aiofiles.open(tile_path, "wb") as f:
@@ -91,7 +102,7 @@ class TileDownloader:
                                     on_progress("success", req, len(content))
                                 return True
                             elif response.status == 429:
-                                await asyncio.sleep(2 ** attempt)
+                                await asyncio.sleep(2**attempt)
                                 continue
                             else:
                                 # Non-retryable HTTP error
@@ -115,15 +126,24 @@ class TileDownloader:
                     on_progress("failed", req, 0)
                 return False
 
-    async def download(self, requests: Sequence[TileRequest], on_progress: Optional[Callable[[str, TileRequest, int], None]] = None) -> None:
+    async def download(
+        self,
+        requests: Sequence[TileRequest],
+        on_progress: Optional[Callable[[str, TileRequest, int], None]] = None,
+    ) -> None:
         semaphore = asyncio.Semaphore(self.concurrent_requests)
         async with aiohttp.ClientSession() as session:
             if on_progress is None:
                 with tqdm(total=len(requests), desc="Downloading tiles") as pbar:
-                    tasks = [self._download_one(session, semaphore, req, pbar, None) for req in requests]
+                    tasks = [
+                        self._download_one(session, semaphore, req, pbar, None) for req in requests
+                    ]
                     await asyncio.gather(*tasks)
             else:
-                tasks = [self._download_one(session, semaphore, req, None, on_progress) for req in requests]
+                tasks = [
+                    self._download_one(session, semaphore, req, None, on_progress)
+                    for req in requests
+                ]
                 await asyncio.gather(*tasks)
 
     # Control methods for interactive UIs
@@ -135,5 +155,3 @@ class TileDownloader:
 
     def cancel(self) -> None:
         self.cancelled = True
-
-

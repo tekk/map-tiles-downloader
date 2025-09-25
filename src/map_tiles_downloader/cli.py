@@ -4,6 +4,7 @@ import argparse
 import asyncio
 import logging
 import os
+import platform
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
 
@@ -27,10 +28,18 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub = parser.add_subparsers(dest="command", required=True)
 
-    # Subcommand: wizard
-    p_wizard = sub.add_parser("wizard", help="Interactive selection of region and provider.")
-    p_wizard.add_argument("--log-level", type=str, default="INFO", choices=["CRITICAL","ERROR","WARNING","INFO","DEBUG"]) 
-    p_wizard.add_argument("--dry-run", action="store_true", help="Plan only and show tile count, no download")
+    # Subcommand: wizard (Windows only)
+    if platform.system() == "Windows":
+        p_wizard = sub.add_parser("wizard", help="Interactive selection of region and provider.")
+        p_wizard.add_argument(
+            "--log-level",
+            type=str,
+            default="INFO",
+            choices=["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"],
+        )
+        p_wizard.add_argument(
+            "--dry-run", action="store_true", help="Plan only and show tile count, no download"
+        )
 
     # Subcommand: bbox
     p_bbox = sub.add_parser("bbox", help="Download tiles for a bounding box.")
@@ -40,14 +49,23 @@ def build_parser() -> argparse.ArgumentParser:
     p_bbox.add_argument("east", type=float)
     p_bbox.add_argument("--min-zoom", type=int, default=1)
     p_bbox.add_argument("--max-zoom", type=int, default=14)
-    p_bbox.add_argument("--provider", type=str, default="thunderforest", choices=list(PROVIDERS.keys()))
+    p_bbox.add_argument(
+        "--provider", type=str, default="thunderforest", choices=list(PROVIDERS.keys())
+    )
     p_bbox.add_argument("--style", type=str, default=None)
     p_bbox.add_argument("--api-key", "-k", type=str, default=None)
     p_bbox.add_argument("--outdir", "-o", type=Path, default=DEFAULT_OUTDIR)
     p_bbox.add_argument("--concurrency", type=int, default=20)
     p_bbox.add_argument("--max-tiles", type=int, default=None)
-    p_bbox.add_argument("--dry-run", action="store_true", help="Plan only and show tile count, no download")
-    p_bbox.add_argument("--log-level", type=str, default="INFO", choices=["CRITICAL","ERROR","WARNING","INFO","DEBUG"]) 
+    p_bbox.add_argument(
+        "--dry-run", action="store_true", help="Plan only and show tile count, no download"
+    )
+    p_bbox.add_argument(
+        "--log-level",
+        type=str,
+        default="INFO",
+        choices=["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"],
+    )
 
     # Subcommand: kml
     p_kml = sub.add_parser("kml", help="Download tiles derived from KML points/routes.")
@@ -56,13 +74,23 @@ def build_parser() -> argparse.ArgumentParser:
     p_kml.add_argument("--lonrgn", type=float, default=0.1)
     p_kml.add_argument("--min-zoom", type=int, default=1)
     p_kml.add_argument("--max-zoom", type=int, default=14)
-    p_kml.add_argument("--provider", type=str, default="thunderforest", choices=list(PROVIDERS.keys()))
+    p_kml.add_argument(
+        "--provider", type=str, default="thunderforest", choices=list(PROVIDERS.keys())
+    )
     p_kml.add_argument("--style", type=str, default=None)
     p_kml.add_argument("--api-key", "-k", type=str, default=None)
     p_kml.add_argument("--outdir", "-o", type=Path, default=DEFAULT_OUTDIR)
     p_kml.add_argument("--concurrency", type=int, default=20)
     p_kml.add_argument("--max-tiles", type=int, default=None)
-    p_kml.add_argument("--dry-run", action="store_true", help="Plan only and show tile count, no download")
+    p_kml.add_argument(
+        "--dry-run", action="store_true", help="Plan only and show tile count, no download"
+    )
+    p_kml.add_argument(
+        "--log-level",
+        type=str,
+        default="INFO",
+        choices=["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"],
+    )
 
     # Subcommand: list providers/regions
     p_list = sub.add_parser("list", help="List providers or regions")
@@ -70,17 +98,27 @@ def build_parser() -> argparse.ArgumentParser:
 
     # Subcommand: tui (curses-based)
     p_tui = sub.add_parser("tui", help="Launch text-based installer UI")
-    p_tui.add_argument("--log-level", type=str, default="INFO", choices=["CRITICAL","ERROR","WARNING","INFO","DEBUG"]) 
+    p_tui.add_argument(
+        "--log-level",
+        type=str,
+        default="INFO",
+        choices=["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"],
+    )
 
     return parser
 
 
-def _requests_for_regions(regions: Dict[str, Tuple[float, float, float, float]], min_zoom: int, max_zoom: int, max_tiles: Optional[int]) -> List[TileRequest]:
+def _requests_for_regions(
+    regions: Dict[str, Tuple[float, float, float, float]],
+    min_zoom: int,
+    max_zoom: int,
+    max_tiles: Optional[int],
+) -> List[TileRequest]:
     requests: List[TileRequest] = []
     nofetch: List[Tuple[int, int, int]] = []
 
     for zoom in range(min_zoom, max_zoom + 1):
-        for (south, west, north, east) in regions.values():
+        for south, west, north, east in regions.values():
             for z, x, y in iter_tiles_for_bbox(south, west, north, east, zoom):
                 if max_tiles is None or len(requests) < max_tiles:
                     requests.append(TileRequest(z, x, y))
@@ -95,6 +133,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     args = parser.parse_args(argv)
 
     if args.command == "wizard":
+        if platform.system() != "Windows":
+            print("Error: The 'wizard' command is only available on Windows platforms.")
+            print("On Unix-like systems, please use the 'tui' command instead.")
+            return 1
         logging.basicConfig(level=getattr(logging, str(args.log_level).upper(), logging.INFO))
         return _run_wizard(dry_run=bool(args.dry_run))
 
@@ -103,9 +145,13 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         regions = {"bbox": (args.south, args.west, args.north, args.east)}
         requests = _requests_for_regions(regions, args.min_zoom, args.max_zoom, args.max_tiles)
         provider = PROVIDERS[args.provider]
-        api_key = args.api_key or (os.getenv(provider.api_key_env) if provider.api_key_env else None)
+        api_key = args.api_key or (
+            os.getenv(provider.api_key_env) if provider.api_key_env else None
+        )
         if provider.requires_api_key and not api_key:
-            parser.error(f"--api-key or {provider.api_key_env} environment variable is required for {provider.display_name}")
+            parser.error(
+                f"--api-key or {provider.api_key_env} environment variable is required for {provider.display_name}"
+            )
         style = args.style or provider.default_style
         url_builder = get_url_builder(provider, api_key=api_key, style=style)
         concurrency = args.concurrency if args.concurrency else provider.default_concurrency
@@ -113,7 +159,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             total = count_tiles_for_regions(regions, args.min_zoom, args.max_zoom)
             print(f"Planned tiles: {total}")
         else:
-            downloader = TileDownloader(args.outdir, url_builder, headers=provider.headers, concurrent_requests=concurrency)
+            downloader = TileDownloader(
+                args.outdir, url_builder, headers=provider.headers, concurrent_requests=concurrency
+            )
             asyncio.run(downloader.download(requests))
         return 0
 
@@ -122,9 +170,13 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         regions = kml_to_regions(args.kmlfile, latrgn=args.latrgn, lonrgn=args.lonrgn)
         requests = _requests_for_regions(regions, args.min_zoom, args.max_zoom, args.max_tiles)
         provider = PROVIDERS[args.provider]
-        api_key = args.api_key or (os.getenv(provider.api_key_env) if provider.api_key_env else None)
+        api_key = args.api_key or (
+            os.getenv(provider.api_key_env) if provider.api_key_env else None
+        )
         if provider.requires_api_key and not api_key:
-            parser.error(f"--api-key or {provider.api_key_env} environment variable is required for {provider.display_name}")
+            parser.error(
+                f"--api-key or {provider.api_key_env} environment variable is required for {provider.display_name}"
+            )
         style = args.style or provider.default_style
         url_builder = get_url_builder(provider, api_key=api_key, style=style)
         concurrency = args.concurrency if args.concurrency else provider.default_concurrency
@@ -132,7 +184,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             total = count_tiles_for_regions(regions, args.min_zoom, args.max_zoom)
             print(f"Planned tiles: {total}")
         else:
-            downloader = TileDownloader(args.outdir, url_builder, headers=provider.headers, concurrent_requests=concurrency)
+            downloader = TileDownloader(
+                args.outdir, url_builder, headers=provider.headers, concurrent_requests=concurrency
+            )
             asyncio.run(downloader.download(requests))
         return 0
 
@@ -190,7 +244,9 @@ def _run_wizard(dry_run: bool = False) -> int:
     min_zoom = int(questionary.text("Min zoom (default 3):", default="3").ask())
     max_zoom = int(questionary.text("Max zoom (default 12):", default="12").ask())
     outdir = Path(questionary.text("Output directory:", default=str(DEFAULT_OUTDIR)).ask())
-    concurrency = int(questionary.text("Concurrency:", default=str(provider.default_concurrency)).ask())
+    concurrency = int(
+        questionary.text("Concurrency:", default=str(provider.default_concurrency)).ask()
+    )
 
     api_key = None
     if provider.requires_api_key:
@@ -212,9 +268,9 @@ def _run_wizard(dry_run: bool = False) -> int:
 
     requests = _requests_for_regions(regions, min_zoom, max_zoom, None)
     url_builder = get_url_builder(provider, api_key=api_key, style=style)
-    downloader = TileDownloader(outdir, url_builder, headers=provider.headers, concurrent_requests=concurrency)
+    downloader = TileDownloader(
+        outdir, url_builder, headers=provider.headers, concurrent_requests=concurrency
+    )
     asyncio.run(downloader.download(requests))
     print("Done.")
     return 0
-
-
