@@ -17,7 +17,7 @@ from .tui import main_tui
 import questionary
 
 
-DEFAULT_OUTDIR = Path(os.path.expanduser("~/maps"))
+DEFAULT_OUTDIR = Path(os.path.expanduser("~/tiles"))
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -103,6 +103,11 @@ def build_parser() -> argparse.ArgumentParser:
         type=str,
         default="INFO",
         choices=["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"],
+    )
+    p_tui.add_argument(
+        "--no-colors",
+        action="store_true",
+        help="Disable colored output in TUI mode",
     )
 
     return parser
@@ -208,7 +213,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             return 0
 
     if args.command == "tui":
-        return main_tui()
+        return main_tui(colors_enabled=not getattr(args, 'no_colors', False))
 
     parser.print_help()
     return 1

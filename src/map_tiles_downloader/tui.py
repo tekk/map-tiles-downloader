@@ -33,21 +33,65 @@ class Menu:
         choices: List[str],
         multi: bool = False,
         all_toggle: bool = False,
+        hierarchical_all: bool = False,
+        colors_enabled: bool = True,
+        allow_back: bool = False,
     ):
         self.stdscr = stdscr
         self.title = title
         self.choices = choices
         self.multi = multi
         self.all_toggle = all_toggle
+        self.hierarchical_all = hierarchical_all
+        self.colors_enabled = colors_enabled
+        self.allow_back = allow_back
         self.current = 0
         self.selected: Dict[int, bool] = {}
         self.top = 0  # index of first visible item for scrolling
 
+    def _get_display_selected(self, idx: int) -> bool:
+        """Get whether an item should be displayed as selected, considering hierarchical relationships."""
+        if not self.multi:
+            return self.selected.get(idx, False)
+
+        # Handle global "All ..." toggle
+        if self.all_toggle and idx == 0:
+            return all(
+                self.selected.get(i, False)
+                for i in range(1, len(self.choices))
+                if len(self.choices) > 1
+            )
+
+        # Handle hierarchical "All of X" items
+        if self.hierarchical_all and idx > 0:  # Skip the global "[All ...]" item
+            choice = self.choices[idx]
+            if " / All of " in choice:
+                # This is an "All of Country" item, check if all regions for this country are selected
+                country = choice.split(" / ")[0]
+                country_prefix = f"{country} / "
+                all_country_items = [
+                    i for i, c in enumerate(self.choices)
+                    if c.startswith(country_prefix) and c != choice
+                ]
+                if all_country_items:
+                    return all(self.selected.get(i, False) for i in all_country_items)
+
+        return self.selected.get(idx, False)
+
     def draw(self) -> None:
         self.stdscr.clear()
         max_y, max_x = self.stdscr.getmaxyx()
-        self.stdscr.addstr(0, 0, self.title[: max_x - 1])
-        help_line = "SPACE select, ENTER confirm, j/k or arrows to move, q to quit"
+
+        # Draw title with color if enabled
+        if self.colors_enabled and curses.has_colors():
+            self.stdscr.addstr(0, 0, self.title[: max_x - 1], curses.color_pair(1) | curses.A_BOLD)
+        else:
+            self.stdscr.addstr(0, 0, self.title[: max_x - 1])
+
+        if self.allow_back:
+            help_line = "SPACE select, ENTER confirm, j/k or arrows to move, b to go back, q to quit"
+        else:
+            help_line = "SPACE select, ENTER confirm, j/k or arrows to move, q to quit"
         self.stdscr.addstr(1, 0, help_line[: max_x - 1])
         start_row = 2
         # Reserve one line at bottom for scroll indicator
@@ -58,20 +102,19 @@ class Menu:
         end = min(total, self.top + visible)
         for i, text in enumerate(self.choices[self.top : end]):
             idx = self.top + i
-            is_selected = self.selected.get(idx, False)
-            if self.all_toggle and self.multi and idx == 0:
-                # reflect selected if all others are selected
-                if all(
-                    self.selected.get(i, False)
-                    for i in range(1, len(self.choices))
-                    if len(self.choices) > 1
-                ):
-                    is_selected = True
+            is_selected = self._get_display_selected(idx)
             prefix = "[*] " if is_selected else "[ ] " if self.multi else "    "
             line = ("> " if idx == self.current else "  ") + prefix + text
             row = start_row + i
             if row < max_y - 1:
-                self.stdscr.addstr(row, 0, line[: max_x - 1])
+                # Apply colors based on item state
+                attr = 0
+                if self.colors_enabled and curses.has_colors():
+                    if idx == self.current:
+                        attr = curses.color_pair(3) | curses.A_BOLD  # Yellow for current cursor
+                    elif is_selected:
+                        attr = curses.color_pair(2)  # Green for selected items
+                self.stdscr.addstr(row, 0, line[: max_x - 1], attr)
         # scroll indicators
         if self.top > 0 and start_row < max_y - 1:
             _curses_safe_addstr(self.stdscr, start_row, max_x - 2, "^")
@@ -118,12 +161,41 @@ class Menu:
                 self.top = min(max(0, self.current - half), max(0, total - visible))
             elif ch == ord(" ") and self.multi:
                 if self.all_toggle and self.current == 0 and len(self.choices) > 1:
-                    # toggle all
+                    # toggle all (global)
                     all_selected = all(
                         self.selected.get(i, False) for i in range(1, len(self.choices))
                     )
                     for i in range(1, len(self.choices)):
                         self.selected[i] = not all_selected
+                elif self.hierarchical_all and self.current > 0:  # Skip global "[All ...]" item
+                    choice = self.choices[self.current]
+                    if " / All of " in choice:
+                        # This is an "All of Country" item - toggle all regions for this country
+                        country = choice.split(" / ")[0]
+                        country_prefix = f"{country} / "
+                        all_country_items = [
+                            i for i, c in enumerate(self.choices)
+                            if c.startswith(country_prefix) and c != choice
+                        ]
+                        # Check if all are currently selected
+                        all_selected = all(self.selected.get(i, False) for i in all_country_items)
+                        # Toggle them
+                        for i in all_country_items:
+                            self.selected[i] = not all_selected
+                    else:
+                        # Regular item - toggle it and check if it affects "All of Country"
+                        self.selected[self.current] = not self.selected.get(self.current, False)
+
+                        # Check if this affects any "All of Country" items
+                        if " / " in choice:
+                            country = choice.split(" / ")[0]
+                            country_all_item = f"{country} / All of {country}"
+                            try:
+                                self.choices.index(country_all_item)
+                                # If all individual items are selected, the "All of Country" should be selected
+                                # But we don't store this in selected dict - it's computed in _get_display_selected
+                            except ValueError:
+                                pass  # "All of Country" item not found, skip
                 else:
                     self.selected[self.current] = not self.selected.get(self.current, False)
             elif ch in (curses.KEY_ENTER, 10, 13):
@@ -133,12 +205,14 @@ class Menu:
                     return [i for i, v in self.selected.items() if v]
                 else:
                     return [self.current]
+            elif ch == ord("b") and self.allow_back:
+                return [-1]  # Special value indicating "go back"
             elif ch in (ord("q"), 27):
                 return None
 
 
 class ProgressScreen:
-    def __init__(self, stdscr: Any, total: int, outdir: Path):
+    def __init__(self, stdscr: Any, total: int, outdir: Path, colors_enabled: bool = True):
         self.stdscr = stdscr
         self.total = total
         self.completed = 0
@@ -150,6 +224,7 @@ class ProgressScreen:
         self.outdir = outdir
         self.avg_tile_size_bytes = 0.0
         self.current_area: str = ""
+        self.colors_enabled = colors_enabled
 
     def on_progress(self, status: str, req: TileRequest, bytes_len: int) -> None:
         if status == "success":
@@ -170,7 +245,13 @@ class ProgressScreen:
     def draw(self) -> None:
         self.stdscr.clear()
         _, max_x = self.stdscr.getmaxyx()
-        self.stdscr.addstr(0, 0, "Downloading tiles  [q: cancel] [p: pause/resume]")
+
+        # Title with color
+        if self.colors_enabled and curses.has_colors():
+            self.stdscr.addstr(0, 0, "Downloading tiles  [q: cancel] [p: pause/resume]", curses.color_pair(1) | curses.A_BOLD)
+        else:
+            self.stdscr.addstr(0, 0, "Downloading tiles  [q: cancel] [p: pause/resume]")
+
         bar_width = max_x - 2
         done_ratio = (self.completed + self.failed + self.skipped) / max(1, self.total)
         done = int(done_ratio * bar_width)
@@ -182,23 +263,88 @@ class ProgressScreen:
         remain = max(0, self.total - processed)
         eta_sec = int(remain / rate) if rate > 0 else 0
         eta_min, eta_s = divmod(eta_sec, 60)
-        self.stdscr.addstr(
-            3,
-            0,
-            f"Completed: {self.completed}  Failed: {self.failed}  Skipped: {self.skipped}  Total: {self.total}",
-        )
-        self.stdscr.addstr(4, 0, f"Rate: {rate:.1f} tiles/s   ETA: {eta_min}m {eta_s}s")
-        # Disk stats
-        self.stdscr.addstr(5, 0, f"Downloaded: {human_bytes(self.bytes_downloaded)}")
+
+        # Status line with colored numbers
+        if self.colors_enabled and curses.has_colors():
+            # Build the status line with colors
+            completed_str = f"{self.completed}"
+            failed_str = f"{self.failed}"
+            skipped_str = f"{self.skipped}"
+            total_str = f"{self.total}"
+
+            self.stdscr.addstr(3, 0, "Completed: ", curses.color_pair(1))
+            self.stdscr.addstr(3, 11, completed_str, curses.color_pair(2))  # Green for completed
+            pos = 11 + len(completed_str)
+
+            self.stdscr.addstr(3, pos, "  Failed: ", curses.color_pair(1))
+            self.stdscr.addstr(3, pos + 11, failed_str, curses.color_pair(4))  # Red for failed
+            pos += 11 + len(failed_str)
+
+            self.stdscr.addstr(3, pos, "  Skipped: ", curses.color_pair(1))
+            self.stdscr.addstr(3, pos + 12, skipped_str, curses.color_pair(3))  # Yellow for skipped
+            pos += 12 + len(skipped_str)
+
+            self.stdscr.addstr(3, pos, f"  Total: {total_str}", curses.color_pair(1))
+        else:
+            self.stdscr.addstr(3, 0, f"Completed: {self.completed}  Failed: {self.failed}  Skipped: {self.skipped}  Total: {self.total}")
+
+        # Rate and ETA with colors
+        if self.colors_enabled and curses.has_colors():
+            rate_str = f"{rate:.1f} tiles/s"
+            eta_str = f"{eta_min}m {eta_s}s"
+
+            self.stdscr.addstr(4, 0, "Rate: ", curses.color_pair(1))
+            self.stdscr.addstr(4, 6, rate_str, curses.color_pair(5))  # Blue for rate
+            self.stdscr.addstr(4, 6 + len(rate_str), "   ETA: ", curses.color_pair(1))
+            self.stdscr.addstr(4, 6 + len(rate_str) + 8, eta_str, curses.color_pair(6))  # Magenta for ETA
+        else:
+            self.stdscr.addstr(4, 0, f"Rate: {rate:.1f} tiles/s   ETA: {eta_min}m {eta_s}s")
+
+        # Disk stats with colors
+        if self.colors_enabled and curses.has_colors():
+            downloaded_str = human_bytes(self.bytes_downloaded)
+            self.stdscr.addstr(5, 0, "Downloaded: ", curses.color_pair(1))
+            self.stdscr.addstr(5, 12, downloaded_str, curses.color_pair(2))  # Green for downloaded
+        else:
+            self.stdscr.addstr(5, 0, f"Downloaded: {human_bytes(self.bytes_downloaded)}")
+
         est_total_bytes = (
             int(self.avg_tile_size_bytes * self.total) if self.avg_tile_size_bytes > 0 else 0
         )
-        self.stdscr.addstr(
-            6, 0, f"Estimated final size: {human_bytes(est_total_bytes)}  Out: {str(self.outdir)}"
-        )
-        self.stdscr.addstr(8, 0, f"Status: {self.status}")
+        if self.colors_enabled and curses.has_colors():
+            est_size_str = human_bytes(est_total_bytes)
+            outdir_str = str(self.outdir)
+
+            self.stdscr.addstr(6, 0, "Estimated final size: ", curses.color_pair(1))
+            self.stdscr.addstr(6, 22, est_size_str, curses.color_pair(5))  # Blue for estimated
+            pos = 22 + len(est_size_str)
+            self.stdscr.addstr(6, pos, "  Out: ", curses.color_pair(1))
+            self.stdscr.addstr(6, pos + 7, outdir_str, curses.color_pair(6))  # Magenta for output dir
+        else:
+            self.stdscr.addstr(
+                6, 0, f"Estimated final size: {human_bytes(est_total_bytes)}  Out: {str(self.outdir)}"
+            )
+
+        # Status with color based on status
+        status_attr = 0
+        if self.colors_enabled and curses.has_colors():
+            if "Completed" in self.status:
+                status_attr = curses.color_pair(2)  # Green for completed
+            elif "Cancelled" in self.status or "Failed" in self.status:
+                status_attr = curses.color_pair(4)  # Red for cancelled/failed
+            elif "Paused" in self.status:
+                status_attr = curses.color_pair(3)  # Yellow for paused
+            else:
+                status_attr = curses.color_pair(5)  # Blue for running
+
+        self.stdscr.addstr(8, 0, f"Status: {self.status}", status_attr)
+
         if self.current_area:
-            self.stdscr.addstr(9, 0, f"Area: {self.current_area}")
+            if self.colors_enabled and curses.has_colors():
+                self.stdscr.addstr(9, 0, f"Area: {self.current_area}", curses.color_pair(6))
+            else:
+                self.stdscr.addstr(9, 0, f"Area: {self.current_area}")
+
         self.stdscr.refresh()
 
 
@@ -213,84 +359,142 @@ def _build_requests(
     return reqs
 
 
-def tui_main(stdscr: Any) -> int:
+def tui_main(stdscr: Any, colors_enabled: bool = True) -> int:
     curses.curs_set(0)
+
+    # Initialize colors if enabled and supported
+    if colors_enabled and curses.has_colors():
+        curses.start_color()
+        curses.use_default_colors()
+
+        # Define color pairs
+        curses.init_pair(1, curses.COLOR_CYAN, -1)      # Title/header color
+        curses.init_pair(2, curses.COLOR_GREEN, -1)     # Selected item color
+        curses.init_pair(3, curses.COLOR_YELLOW, -1)    # Current cursor color
+        curses.init_pair(4, curses.COLOR_RED, -1)       # Error/warning color
+        curses.init_pair(5, curses.COLOR_BLUE, -1)      # Progress/info color
+        curses.init_pair(6, curses.COLOR_MAGENTA, -1)   # Status color
+
     catalog = load_region_catalog()
-    # Continents (multi-select)
-    continents = list(catalog.keys())
-    cont_choices = ["[All continents]"] + continents
-    sel = Menu(
-        stdscr,
-        "Select continents (SPACE to multi-select)",
-        cont_choices,
-        multi=True,
-        all_toggle=True,
-    ).run()
-    if not sel:
-        return 1
-    if 0 in sel:
-        selected_continents = continents
-    else:
-        selected_continents = [continents[i - 1] for i in sel]
-    # Countries (multi-select across selected continents)
-    country_items: List[Tuple[str, Tuple[str, str]]] = []  # (label, (continent, country))
-    for cont in selected_continents:
-        for country in catalog[cont].keys():
-            country_items.append((f"{cont} / {country}", (cont, country)))
-    if not country_items:
-        return 1
-    country_labels = ["[All countries]"] + [lbl for lbl, _ in country_items]
-    sel = Menu(
-        stdscr,
-        "Select countries (SPACE to multi-select)",
-        country_labels,
-        multi=True,
-        all_toggle=True,
-    ).run()
-    if not sel:
-        return 1
-    if 0 in sel:
-        selected_pairs = [pair for _, pair in country_items]
-    else:
-        selected_pairs = [country_items[i - 1][1] for i in sel]
-    # States (multi-select across selected countries)
-    state_items: List[Tuple[str, Tuple[str, str, str]]] = []  # (label, (continent, country, state))
-    for cont, country in selected_pairs:
-        for state in catalog[cont][country].keys():
-            state_items.append((f"{country} / {state}", (cont, country, state)))
-    if not state_items:
-        return 1
-    state_labels = ["[All states/regions]"] + [lbl for lbl, _ in state_items]
-    sel = Menu(
-        stdscr,
-        "Select states/regions (SPACE to multi-select)",
-        state_labels,
-        multi=True,
-        all_toggle=True,
-    ).run()
-    if not sel:
-        return 1
-    if 0 in sel:
-        chosen_states = [meta for _, meta in state_items]
-    else:
-        chosen_states = [state_items[i - 1][1] for i in sel]
-    regions = {
-        f"{country} — {state}": catalog[cont][country][state]
-        for (cont, country, state) in chosen_states
-    }
-    providers = list(PROVIDERS.keys())
-    sel = Menu(stdscr, "Select map provider", providers, multi=False).run()
-    if not sel:
-        return 1
-    provider_key = providers[sel[0]]
-    provider = PROVIDERS[provider_key]
-    style = provider.default_style
-    if provider.styles:
-        styles = provider.styles
-        sel = Menu(stdscr, "Select provider style", styles, multi=False).run()
+
+    # Continents selection loop
+    while True:
+        continents = list(catalog.keys())
+        cont_choices = ["[All continents]"] + continents
+        sel = Menu(
+            stdscr,
+            "Select continents (SPACE to multi-select)",
+            cont_choices,
+            multi=True,
+            all_toggle=True,
+            colors_enabled=colors_enabled,
+        ).run()
         if not sel:
             return 1
-        style = styles[sel[0]]
+        if 0 in sel:
+            selected_continents = continents
+        else:
+            selected_continents = [continents[i - 1] for i in sel]
+
+        # Countries selection loop
+        while True:
+            country_items: List[Tuple[str, Tuple[str, str]]] = []  # (label, (continent, country))
+            for cont in selected_continents:
+                for country in catalog[cont].keys():
+                    country_items.append((f"{cont} / {country}", (cont, country)))
+            if not country_items:
+                return 1
+            country_labels = ["[All countries]"] + [lbl for lbl, _ in country_items]
+            sel = Menu(
+                stdscr,
+                "Select countries (SPACE to multi-select)",
+                country_labels,
+                multi=True,
+                all_toggle=True,
+                colors_enabled=colors_enabled,
+                allow_back=True,
+            ).run()
+            if sel == [-1]:  # Back to continents
+                break
+            if not sel:
+                return 1
+            if 0 in sel:
+                selected_pairs = [pair for _, pair in country_items]
+            else:
+                selected_pairs = [country_items[i - 1][1] for i in sel]
+
+            # States selection loop
+            while True:
+                state_items: List[Tuple[str, Tuple[str, str, str]]] = []  # (label, (continent, country, state))
+                for cont, country in selected_pairs:
+                    for state in catalog[cont][country].keys():
+                        state_items.append((f"{country} / {state}", (cont, country, state)))
+                if not state_items:
+                    return 1
+                state_labels = ["[All states/regions]"] + [lbl for lbl, _ in state_items]
+                sel = Menu(
+                    stdscr,
+                    "Select states/regions (SPACE to multi-select)",
+                    state_labels,
+                    multi=True,
+                    all_toggle=True,
+                    hierarchical_all=True,
+                    colors_enabled=colors_enabled,
+                    allow_back=True,
+                ).run()
+                if sel == [-1]:  # Back to countries
+                    break
+                if not sel:
+                    return 1
+                if 0 in sel:
+                    chosen_states = [meta for _, meta in state_items]
+                else:
+                    chosen_states = [state_items[i - 1][1] for i in sel]
+                regions = {
+                    f"{country} — {state}": catalog[cont][country][state]
+                    for (cont, country, state) in chosen_states
+                }
+
+                # Provider selection loop
+                while True:
+                    providers = list(PROVIDERS.keys())
+                    sel = Menu(stdscr, "Select map provider", providers, multi=False, colors_enabled=colors_enabled, allow_back=True).run()
+                    if sel == [-1]:  # Back to states
+                        break
+                    if not sel:
+                        return 1
+                    provider_key = providers[sel[0]]
+                    provider = PROVIDERS[provider_key]
+                    style = provider.default_style
+
+                    # Style selection loop (only if provider has styles)
+                    if provider.styles:
+                        while True:
+                            styles = provider.styles
+                            sel = Menu(stdscr, "Select provider style", styles, multi=False, colors_enabled=colors_enabled, allow_back=True).run()
+                            if sel == [-1]:  # Back to provider
+                                break
+                            if not sel:
+                                return 1
+                            style = styles[sel[0]]
+                            # If we reach here, we've completed all selections
+                            break
+                        if sel == [-1]:
+                            continue  # Back to provider selection
+                    # If we reach here, we've completed all selections
+                    break
+                if sel == [-1]:
+                    continue  # Back to states selection
+                # If we reach here, we've completed all selections
+                break
+            if sel == [-1]:
+                continue  # Back to countries selection
+            # If we reach here, we've completed all selections
+            break
+        if sel == [-1]:
+            continue  # Back to continents selection
+        # If we reach here, we've completed all selections
+        break
     # API key screen if needed
     api_key: Optional[str] = None
     if provider.requires_api_key:
@@ -300,20 +504,32 @@ def tui_main(stdscr: Any) -> int:
         if not api_key:
             curses.echo()
             stdscr.clear()
-            stdscr.addstr(0, 0, f"Enter API key for {provider.display_name}:")
+            if colors_enabled and curses.has_colors():
+                stdscr.addstr(0, 0, f"Enter API key for {provider.display_name}:", curses.color_pair(1) | curses.A_BOLD)
+            else:
+                stdscr.addstr(0, 0, f"Enter API key for {provider.display_name}:")
             stdscr.refresh()
             api_key = _safe_getstr(stdscr, 1, 0, 256)
             curses.noecho()
     # Zoom levels and outdir
     curses.echo()
     stdscr.clear()
-    stdscr.addstr(0, 0, "Min zoom (default 3):")
-    min_zoom_s = _safe_getstr(stdscr, 0, 22, 4, default="3")
-    stdscr.addstr(1, 0, "Max zoom (default 12):")
-    max_zoom_s = _safe_getstr(stdscr, 1, 23, 4, default="12")
-    stdscr.addstr(2, 0, "Output directory (default ~/maps):")
-    outdir_s = _safe_getstr(stdscr, 2, 34, 256, default=os.path.expanduser("~/maps"))
-    stdscr.addstr(3, 0, f"Concurrency (default {provider.default_concurrency}):")
+    if colors_enabled and curses.has_colors():
+        stdscr.addstr(0, 0, "Min zoom (default 3):", curses.color_pair(1) | curses.A_BOLD)
+        min_zoom_s = _safe_getstr(stdscr, 0, 22, 4, default="3")
+        stdscr.addstr(1, 0, "Max zoom (default 12):", curses.color_pair(1) | curses.A_BOLD)
+        max_zoom_s = _safe_getstr(stdscr, 1, 23, 4, default="12")
+        stdscr.addstr(2, 0, "Output directory (default ~/tiles):", curses.color_pair(1) | curses.A_BOLD)
+        outdir_s = _safe_getstr(stdscr, 2, 34, 256, default=os.path.expanduser("~/tiles"))
+        stdscr.addstr(3, 0, f"Concurrency (default {provider.default_concurrency}):", curses.color_pair(1) | curses.A_BOLD)
+    else:
+        stdscr.addstr(0, 0, "Min zoom (default 3):")
+        min_zoom_s = _safe_getstr(stdscr, 0, 22, 4, default="3")
+        stdscr.addstr(1, 0, "Max zoom (default 12):")
+        max_zoom_s = _safe_getstr(stdscr, 1, 23, 4, default="12")
+        stdscr.addstr(2, 0, "Output directory (default ~/tiles):")
+        outdir_s = _safe_getstr(stdscr, 2, 34, 256, default=os.path.expanduser("~/tiles"))
+        stdscr.addstr(3, 0, f"Concurrency (default {provider.default_concurrency}):")
     conc_s = _safe_getstr(
         stdscr,
         3,
@@ -334,10 +550,16 @@ def tui_main(stdscr: Any) -> int:
     )
     # Show pre-start estimation
     stdscr.clear()
-    stdscr.addstr(0, 0, f"Planned tiles: {total}")
-    stdscr.addstr(1, 0, f"Estimated average tile size: {human_bytes(int(est_avg))}")
-    stdscr.addstr(2, 0, f"Estimated final size: {human_bytes(int(est_avg * total))}")
-    stdscr.addstr(4, 0, "Press ENTER to start, q to cancel")
+    if colors_enabled and curses.has_colors():
+        stdscr.addstr(0, 0, f"Planned tiles: {total}", curses.color_pair(5) | curses.A_BOLD)
+        stdscr.addstr(1, 0, f"Estimated average tile size: {human_bytes(int(est_avg))}", curses.color_pair(5))
+        stdscr.addstr(2, 0, f"Estimated final size: {human_bytes(int(est_avg * total))}", curses.color_pair(5))
+        stdscr.addstr(4, 0, "Press ENTER to start, q to cancel", curses.color_pair(2) | curses.A_BOLD)
+    else:
+        stdscr.addstr(0, 0, f"Planned tiles: {total}")
+        stdscr.addstr(1, 0, f"Estimated average tile size: {human_bytes(int(est_avg))}")
+        stdscr.addstr(2, 0, f"Estimated final size: {human_bytes(int(est_avg * total))}")
+        stdscr.addstr(4, 0, "Press ENTER to start, q to cancel")
     stdscr.refresh()
     while True:
         ch = stdscr.getch()
@@ -345,7 +567,7 @@ def tui_main(stdscr: Any) -> int:
             break
         if ch in (ord("q"), 27):
             return 0
-    prog = ProgressScreen(stdscr, total=total, outdir=outdir)
+    prog = ProgressScreen(stdscr, total=total, outdir=outdir, colors_enabled=colors_enabled)
     prog.avg_tile_size_bytes = est_avg
     prog.draw()
     # Build downloader and tasks
@@ -398,18 +620,21 @@ def tui_main(stdscr: Any) -> int:
     prog.status = "Completed" if not downloader.cancelled else "Cancelled"
     prog.draw()
     stdscr.nodelay(False)
-    stdscr.addstr(7, 0, "Press any key to exit...")
+    if colors_enabled and curses.has_colors():
+        stdscr.addstr(7, 0, "Press any key to exit...", curses.color_pair(2) | curses.A_BOLD)
+    else:
+        stdscr.addstr(7, 0, "Press any key to exit...")
     stdscr.getch()
     return 0
 
 
-def main_tui() -> int:
+def main_tui(colors_enabled: bool = True) -> int:
     if not HAS_CURSES:
         print("Error: TUI mode requires curses library, which is not available on this platform.")
         print("The curses library is typically available on Unix-like systems (Linux, macOS).")
         print("On Windows, please use the 'wizard' command instead.")
         return 1
-    return curses.wrapper(tui_main)
+    return curses.wrapper(tui_main, colors_enabled)
 
 
 def _safe_getstr(stdscr: Any, y: int, x: int, n: int, default: Optional[str] = None) -> str:

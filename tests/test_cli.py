@@ -124,6 +124,13 @@ class TestBuildParser:
         parser = build_parser()
         args = parser.parse_args(["tui"])
         assert args.command == "tui"
+        assert args.no_colors is False  # Default should be False (colors enabled)
+
+    def test_tui_subcommand_no_colors(self):
+        parser = build_parser()
+        args = parser.parse_args(["tui", "--no-colors"])
+        assert args.command == "tui"
+        assert args.no_colors is True
 
     @pytest.mark.skipif(
         platform.system() != "Windows", reason="Wizard command only available on Windows"
@@ -253,4 +260,11 @@ class TestMainFunction:
         mock_main_tui.return_value = 0
         result = main(["tui"])
         assert result == 0
-        mock_main_tui.assert_called_once()
+        mock_main_tui.assert_called_once_with(colors_enabled=True)
+
+    @patch("map_tiles_downloader.cli.main_tui")
+    def test_main_tui_no_colors(self, mock_main_tui):
+        mock_main_tui.return_value = 0
+        result = main(["tui", "--no-colors"])
+        assert result == 0
+        mock_main_tui.assert_called_once_with(colors_enabled=False)
