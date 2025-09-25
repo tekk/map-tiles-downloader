@@ -1,8 +1,7 @@
+import os
 import tempfile
 import subprocess
 from pathlib import Path
-from unittest.mock import patch
-import pytest
 
 # Integration tests for end-to-end functionality
 # These tests run the actual CLI commands and verify the results
@@ -255,6 +254,3 @@ class TestErrorHandlingIntegration:
             assert result.returncode == 0
             assert "Planned tiles:" in result.stdout
 
-
-# Import os for environment variable handling
-import os
