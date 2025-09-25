@@ -162,7 +162,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         concurrency = args.concurrency if args.concurrency else provider.default_concurrency
         if args.dry_run:
             total = count_tiles_for_regions(regions, args.min_zoom, args.max_zoom)
-            print(f"Planned tiles: {total}")
+            print(f"Planned tiles: {total}", flush=True)
         else:
             downloader = TileDownloader(
                 args.outdir, url_builder, headers=provider.headers, concurrent_requests=concurrency
@@ -187,7 +187,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         concurrency = args.concurrency if args.concurrency else provider.default_concurrency
         if args.dry_run:
             total = count_tiles_for_regions(regions, args.min_zoom, args.max_zoom)
-            print(f"Planned tiles: {total}")
+            print(f"Planned tiles: {total}", flush=True)
         else:
             downloader = TileDownloader(
                 args.outdir, url_builder, headers=provider.headers, concurrent_requests=concurrency

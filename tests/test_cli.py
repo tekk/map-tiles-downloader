@@ -211,7 +211,7 @@ class TestMainFunction:
 
         result = main(["bbox", "0", "0", "10", "10", "--dry-run"])
         assert result == 0
-        mock_print.assert_called_with("Planned tiles: 42")
+        mock_print.assert_called_with("Planned tiles: 42", flush=True)
 
     @patch("map_tiles_downloader.cli.kml_to_regions")
     @patch("map_tiles_downloader.cli.count_tiles_for_regions")
@@ -233,7 +233,7 @@ class TestMainFunction:
 
         result = main(["kml", "test.kml", "--dry-run"])
         assert result == 0
-        mock_print.assert_called_with("Planned tiles: 24")
+        mock_print.assert_called_with("Planned tiles: 24", flush=True)
 
     @patch("map_tiles_downloader.cli.load_region_catalog")
     @patch("builtins.print")

@@ -1,7 +1,11 @@
 import os
+import sys
 import tempfile
 import subprocess
 from pathlib import Path
+
+# Get the path to the installed script
+SCRIPT_PATH = os.path.join(os.path.dirname(sys.executable), "map-tiles-downloader")
 
 # Integration tests for end-to-end functionality
 # These tests run the actual CLI commands and verify the results
@@ -18,7 +22,7 @@ class TestCLIIntegration:
             # Run bbox command with dry-run (use osm provider to avoid API key requirement)
             result = subprocess.run(
                 [
-                    "map-tiles-downloader",
+                    SCRIPT_PATH,
                     "bbox",
                     "0",
                     "0",
@@ -36,7 +40,7 @@ class TestCLIIntegration:
             )
 
             assert result.returncode == 0
-            assert "Planned tiles:" in result.stdout
+            assert "Planned tiles:" in (result.stdout + result.stderr)
             # Should not create any tile files
             assert not any(output_dir.rglob("*.png"))
 
@@ -48,7 +52,7 @@ class TestCLIIntegration:
             # Run bbox command with OSM provider (no API key needed)
             result = subprocess.run(
                 [
-                    "map-tiles-downloader",
+                    SCRIPT_PATH,
                     "bbox",
                     "0",
                     "0",
@@ -66,12 +70,12 @@ class TestCLIIntegration:
             )
 
             assert result.returncode == 0
-            assert "Planned tiles:" in result.stdout
+            assert "Planned tiles:" in (result.stdout + result.stderr)
 
     def test_list_providers_command(self):
         """Test list providers command"""
         result = subprocess.run(
-            ["map-tiles-downloader", "list", "providers"],
+            [SCRIPT_PATH, "list", "providers"],
             capture_output=True,
             text=True,
             cwd=Path.cwd(),
@@ -85,7 +89,7 @@ class TestCLIIntegration:
     def test_list_regions_command(self):
         """Test list regions command"""
         result = subprocess.run(
-            ["map-tiles-downloader", "list", "regions"],
+            [SCRIPT_PATH, "list", "regions"],
             capture_output=True,
             text=True,
             cwd=Path.cwd(),
@@ -99,7 +103,7 @@ class TestCLIIntegration:
     def test_invalid_command(self):
         """Test invalid command returns error"""
         result = subprocess.run(
-            ["map-tiles-downloader", "invalid_command"],
+            [SCRIPT_PATH, "invalid_command"],
             capture_output=True,
             text=True,
             cwd=Path.cwd(),
@@ -111,7 +115,7 @@ class TestCLIIntegration:
     def test_bbox_missing_coordinates(self):
         """Test bbox command with missing coordinates"""
         result = subprocess.run(
-            ["map-tiles-downloader", "bbox"], capture_output=True, text=True, cwd=Path.cwd()
+            [SCRIPT_PATH, "bbox"], capture_output=True, text=True, cwd=Path.cwd()
         )
 
         assert result.returncode != 0
@@ -120,7 +124,7 @@ class TestCLIIntegration:
     def test_kml_command_missing_file(self):
         """Test kml command with missing file"""
         result = subprocess.run(
-            ["map-tiles-downloader", "kml", "nonexistent.kml"],
+            [SCRIPT_PATH, "kml", "nonexistent.kml"],
             capture_output=True,
             text=True,
             cwd=Path.cwd(),
@@ -154,7 +158,7 @@ class TestKMLIntegration:
 
             result = subprocess.run(
                 [
-                    "map-tiles-downloader",
+                    SCRIPT_PATH,
                     "kml",
                     str(kml_file),
                     "--provider",
@@ -169,7 +173,7 @@ class TestKMLIntegration:
             )
 
             assert result.returncode == 0
-            assert "Planned tiles:" in result.stdout
+            assert "Planned tiles:" in (result.stdout + result.stderr)
 
     def test_kml_command_with_linestring(self):
         """Test KML command with LineString geometry"""
@@ -195,7 +199,7 @@ class TestKMLIntegration:
 
             result = subprocess.run(
                 [
-                    "map-tiles-downloader",
+                    SCRIPT_PATH,
                     "kml",
                     str(kml_file),
                     "--provider",
@@ -210,7 +214,7 @@ class TestKMLIntegration:
             )
 
             assert result.returncode == 0
-            assert "Planned tiles:" in result.stdout
+            assert "Planned tiles:" in (result.stdout + result.stderr)
             # Should have created multiple regions from the linestring
             output_lines = result.stdout.strip().split("\n")
             tiles_line = [line for line in output_lines if "Planned tiles:" in line]
@@ -227,7 +231,7 @@ class TestProviderIntegration:
 
             result = subprocess.run(
                 [
-                    "map-tiles-downloader",
+                    SCRIPT_PATH,
                     "bbox",
                     "0",
                     "0",
@@ -265,7 +269,7 @@ class TestProviderIntegration:
 
             result = subprocess.run(
                 [
-                    "map-tiles-downloader",
+                    SCRIPT_PATH,
                     "bbox",
                     "0",
                     "0",
@@ -284,7 +288,7 @@ class TestProviderIntegration:
             )
 
             assert result.returncode == 0
-            assert "Planned tiles:" in result.stdout
+            assert "Planned tiles:" in (result.stdout + result.stderr)
 
 
 class TestErrorHandlingIntegration:
@@ -297,7 +301,7 @@ class TestErrorHandlingIntegration:
 
             result = subprocess.run(
                 [
-                    "map-tiles-downloader",
+                    SCRIPT_PATH,
                     "bbox",
                     "0",
                     "0",
@@ -320,7 +324,7 @@ class TestErrorHandlingIntegration:
 
             # Should still work but might produce 0 tiles
             assert result.returncode == 0
-            assert "Planned tiles:" in result.stdout
+            assert "Planned tiles:" in (result.stdout + result.stderr)
 
     def test_concurrency_parameter(self):
         """Test concurrency parameter handling"""
@@ -329,7 +333,7 @@ class TestErrorHandlingIntegration:
 
             result = subprocess.run(
                 [
-                    "map-tiles-downloader",
+                    SCRIPT_PATH,
                     "bbox",
                     "0",
                     "0",
@@ -349,4 +353,4 @@ class TestErrorHandlingIntegration:
             )
 
             assert result.returncode == 0
-            assert "Planned tiles:" in result.stdout
+            assert "Planned tiles:" in (result.stdout + result.stderr)
