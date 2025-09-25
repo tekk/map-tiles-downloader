@@ -1,11 +1,19 @@
 import os
+import shutil
 import sys
 import tempfile
 import subprocess
 from pathlib import Path
 
 # Get the path to the installed script
-SCRIPT_PATH = os.path.join(os.path.dirname(sys.executable), "map-tiles-downloader")
+SCRIPT_PATH = shutil.which("map-tiles-downloader")
+if SCRIPT_PATH is None:
+    # Fallback: try to find it relative to the Python executable
+    SCRIPT_PATH = os.path.join(os.path.dirname(sys.executable), "map-tiles-downloader")
+    # On Windows, scripts might be in Scripts subdirectory
+    if not os.path.exists(SCRIPT_PATH) and os.name == 'nt':
+        scripts_dir = os.path.join(os.path.dirname(sys.executable), "Scripts")
+        SCRIPT_PATH = os.path.join(scripts_dir, "map-tiles-downloader.exe")
 
 # Integration tests for end-to-end functionality
 # These tests run the actual CLI commands and verify the results
