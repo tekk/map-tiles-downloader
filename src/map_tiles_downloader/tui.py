@@ -403,7 +403,9 @@ def tui_main(stdscr: Any, colors_enabled: bool = True) -> int:
         curses.init_pair(4, curses.COLOR_RED, -1)  # Error/warning color (red works on both)
         curses.init_pair(5, curses.COLOR_MAGENTA, -1)  # Progress/info color (magenta works on both)
         curses.init_pair(6, curses.COLOR_MAGENTA, -1)  # Status color (magenta works on both)
-        curses.init_pair(7, curses.COLOR_CYAN, -1)  # Captions (cyan for better visibility than white)
+        curses.init_pair(
+            7, curses.COLOR_CYAN, -1
+        )  # Captions (cyan for better visibility than white)
         curses.init_pair(8, curses.COLOR_CYAN, -1)  # Status label (cyan for consistency)
         curses.init_pair(9, curses.COLOR_GREEN, -1)  # Bright green (for Running status)
 
