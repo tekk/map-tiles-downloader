@@ -137,14 +137,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
 
-    # Default to TUI mode if no command is specified
+    # If no command is provided, default to interactive mode based on platform
     if args.command is None:
         if platform.system() == "Windows":
-            # On Windows, default to wizard mode
-            args.command = "wizard"
-            args.dry_run = False
+            logging.basicConfig(level=logging.INFO)
+            return _run_wizard()
         else:
-            # On other platforms, default to TUI mode
             return main_tui()
 
     if args.command == "wizard":
