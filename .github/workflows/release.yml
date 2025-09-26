@@ -23,7 +23,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install . pyinstaller
-          pyinstaller --onefile --name map-tiles-downloader src\map_tiles_downloader\__main__.py
+          pyinstaller map-tiles-downloader.spec
           New-Item -ItemType Directory -Force -Path build-out | Out-Null
           $ver = "${{ github.ref_name }}"
           Copy-Item "dist/map-tiles-downloader.exe" ("build-out/map-tiles-downloader-Windows-x86_64-" + $ver + ".exe")

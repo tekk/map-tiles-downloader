@@ -26,7 +26,7 @@ def build_parser() -> argparse.ArgumentParser:
         description="Download Thunderforest map tiles by bounding box or from KML waypoints/routes.",
     )
 
-    sub = parser.add_subparsers(dest="command", required=True)
+    sub = parser.add_subparsers(dest="command", required=False)
 
     # Subcommand: wizard (Windows only)
     if platform.system() == "Windows":
@@ -136,6 +136,16 @@ def _requests_for_regions(
 def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
+
+    # Default to TUI mode if no command is specified
+    if args.command is None:
+        if platform.system() == "Windows":
+            # On Windows, default to wizard mode
+            args.command = "wizard"
+            args.dry_run = False
+        else:
+            # On other platforms, default to TUI mode
+            return main_tui()
 
     if args.command == "wizard":
         if platform.system() != "Windows":
