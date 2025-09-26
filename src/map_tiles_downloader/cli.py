@@ -8,21 +8,12 @@ import platform
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
 
-# Use absolute imports when run as standalone script (for PyInstaller compatibility)
-if __name__ == "__main__":
-    from map_tiles_downloader.downloader import TileDownloader, TileRequest
-    from map_tiles_downloader.tiling import iter_tiles_for_bbox, count_tiles_for_regions
-    from map_tiles_downloader.kml_regions import kml_to_regions
-    from map_tiles_downloader.providers import PROVIDERS, get_url_builder
-    from map_tiles_downloader.regions import load_region_catalog, RegionCatalog
-    from map_tiles_downloader.tui import main_tui
-else:
-    from .downloader import TileDownloader, TileRequest
-    from .tiling import iter_tiles_for_bbox, count_tiles_for_regions
-    from .kml_regions import kml_to_regions
-    from .providers import PROVIDERS, get_url_builder
-    from .regions import load_region_catalog, RegionCatalog
-    from .tui import main_tui
+from .downloader import TileDownloader, TileRequest
+from .tiling import iter_tiles_for_bbox, count_tiles_for_regions
+from .kml_regions import kml_to_regions
+from .providers import PROVIDERS, get_url_builder
+from .regions import load_region_catalog, RegionCatalog
+from .tui import main_tui
 import questionary
 
 

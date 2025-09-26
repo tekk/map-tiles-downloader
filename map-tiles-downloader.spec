@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['src/map_tiles_downloader/cli.py'],
+    ['main.py'],
     pathex=[],
     binaries=[],
     datas=[],
