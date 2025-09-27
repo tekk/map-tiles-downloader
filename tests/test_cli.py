@@ -176,9 +176,12 @@ class TestMainFunction:
         with pytest.raises(SystemExit):
             main(["--help"])
 
-    def test_main_no_args(self):
-        with pytest.raises(SystemExit):
-            main([])
+    @patch("map_tiles_downloader.cli.main_tui")
+    def test_main_no_args(self, mock_tui):
+        mock_tui.return_value = 0
+        result = main([])
+        assert result == 0
+        mock_tui.assert_called_once_with()
 
     def test_main_wizard_non_windows(self):
         if platform.system() != "Windows":
