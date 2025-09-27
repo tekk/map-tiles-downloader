@@ -29,17 +29,16 @@ def build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command", required=False)
 
     # Subcommand: wizard (Windows only)
-    if platform.system() == "Windows":
-        p_wizard = sub.add_parser("wizard", help="Interactive selection of region and provider.")
-        p_wizard.add_argument(
-            "--log-level",
-            type=str,
-            default="INFO",
-            choices=["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"],
-        )
-        p_wizard.add_argument(
-            "--dry-run", action="store_true", help="Plan only and show tile count, no download"
-        )
+    p_wizard = sub.add_parser("wizard", help="Interactive selection of region and provider.")
+    p_wizard.add_argument(
+        "--log-level",
+        type=str,
+        default="INFO",
+        choices=["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"],
+    )
+    p_wizard.add_argument(
+        "--dry-run", action="store_true", help="Plan only and show tile count, no download"
+    )
 
     # Subcommand: bbox
     p_bbox = sub.add_parser("bbox", help="Download tiles for a bounding box.")
