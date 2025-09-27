@@ -10,9 +10,17 @@ permissions:
 
 jobs:
   build-windows:
-    name: Build Windows x64 portable exe
+    name: Build Windows ${{ matrix.arch }} portable exe
     if: ${{ github.actor != 'nektos/act' }}
-    runs-on: windows-latest
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: windows-latest
+          - arch: arm64
+            runner: windows-11-arm
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -26,10 +34,10 @@ jobs:
           pyinstaller map-tiles-downloader.spec
           New-Item -ItemType Directory -Force -Path build-out | Out-Null
           $ver = "${{ github.ref_name }}"
-          Copy-Item "dist/map-tiles-downloader.exe" ("build-out/map-tiles-downloader-Windows-x86_64-" + $ver + ".exe")
+          Copy-Item "dist/map-tiles-downloader.exe" ("build-out/map-tiles-downloader-Windows-${{ matrix.arch }}-" + $ver + ".exe")
       - uses: actions/upload-artifact@v4
         with:
-          name: windows-exe
+          name: windows-${{ matrix.arch }}-exe
           path: build-out/*
 
   build-macos:
