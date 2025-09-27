@@ -146,7 +146,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     if args.command == "wizard":
         if platform.system() != "Windows":
-            parser.error("The 'wizard' command is only available on Windows platforms.\nOn Unix-like systems, please use the 'tui' command instead.")
+            parser.error(
+                "The 'wizard' command is only available on Windows platforms.\nOn Unix-like systems, please use the 'tui' command instead."
+            )
         logging.basicConfig(level=getattr(logging, str(args.log_level).upper(), logging.INFO))
         return _run_wizard(dry_run=bool(args.dry_run))
 
