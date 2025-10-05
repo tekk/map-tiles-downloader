@@ -4,7 +4,6 @@ import argparse
 import asyncio
 import logging
 import os
-import platform
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
 
@@ -132,25 +131,31 @@ def _requests_for_regions(
     return requests
 
 
+def _has_curses() -> bool:
+    try:
+        import curses
+        return True
+    except ImportError:
+        return False
+
+
+def _run_interactive(dry_run: bool = False) -> int:
+    if _has_curses():
+        return main_tui()
+    return _run_wizard(dry_run=dry_run)
+
+
 def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
 
-    # If no command is provided, default to interactive mode based on platform
     if args.command is None:
-        if platform.system() == "Windows":
-            logging.basicConfig(level=logging.INFO)
-            return _run_wizard()
-        else:
-            return main_tui()
+        logging.basicConfig(level=logging.INFO)
+        return _run_interactive()
 
     if args.command == "wizard":
-        if platform.system() != "Windows":
-            parser.error(
-                "The 'wizard' command is only available on Windows platforms.\nOn Unix-like systems, please use the 'tui' command instead."
-            )
         logging.basicConfig(level=getattr(logging, str(args.log_level).upper(), logging.INFO))
-        return _run_wizard(dry_run=bool(args.dry_run))
+        return _run_interactive(dry_run=bool(args.dry_run))
 
     if args.command == "bbox":
         logging.basicConfig(level=getattr(logging, str(args.log_level).upper(), logging.INFO))

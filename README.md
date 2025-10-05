@@ -21,19 +21,14 @@ The source code lives in the GitHub repository: [tekk/map-tiles-downloader](http
 
 ### If you want to compile yourself
 
-```bash
-git clone https://github.com/tekk/map-tiles-downloader.git
-cd map-tiles-downloader
-```
-
-Fist, install the project into a virtual environment. Then run the text-based installer and follow the prompts. You can select one or more continents, countries, and regions, choose a provider (Thunderforest or OpenStreetMap), set zoom levels, and choose where to save the tiles. If the provider needs an API key, you’ll be asked for it.
+First, install the project into a virtual environment. Then launch the interactive interface and follow the prompts. Select one or more continents, countries, and regions, choose a provider (Thunderforest or OpenStreetMap), set zoom levels, and pick an output directory. If the provider needs an API key you’ll be asked for it.
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 pip install -e .
-mtd tui
+mtd
 ```
 
 If you prefer commands instead of the guided interface, you can use direct subcommands. Bounding box mode lets you fetch tiles for a given rectangle. KML mode expands points and routes into small areas around each location.
