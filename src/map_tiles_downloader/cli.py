@@ -141,7 +141,23 @@ def _has_curses() -> bool:
 
 def _run_interactive(dry_run: bool = False) -> int:
     if _has_curses():
-        return main_tui()
+        try:
+            return main_tui()
+        except Exception as exc:  # pragma: no cover
+            # If curses is available but cannot be initialized (e.g. CI without TTY),
+            # gracefully fall back to the simple wizard implementation instead of
+            # crashing with a terminal setup error.
+            try:
+                import curses  # noqa: WPS433
+            except ImportError:
+                curses = None  # type: ignore
+            if curses is None or isinstance(exc, (AttributeError, getattr(curses, "error", Exception))):
+                # Log for debugging purposes but do not fail.
+                logging.debug("Falling back to wizard mode: %s", exc)
+            else:
+                # Unexpected exception, re-raise.
+                raise
+    # If curses is not available or failed to initialize, use questionary wizard.
     if dry_run:
         return _run_wizard(dry_run=True)
     return _run_wizard()
