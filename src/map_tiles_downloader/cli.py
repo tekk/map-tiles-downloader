@@ -6,7 +6,7 @@ import logging
 import os
 import platform
 from pathlib import Path
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from .downloader import TileDownloader, TileRequest
 from .tiling import iter_tiles_for_bbox, count_tiles_for_regions
@@ -133,11 +133,9 @@ def _requests_for_regions(
 
 
 def _has_curses() -> bool:
-    try:
-        import curses
-        return True
-    except ImportError:
-        return False
+    import importlib.util
+
+    return importlib.util.find_spec("curses") is not None
 
 
 def _run_interactive(dry_run: bool = False) -> int:
@@ -145,11 +143,14 @@ def _run_interactive(dry_run: bool = False) -> int:
         try:
             return main_tui()
         except Exception as exc:
+            _curses_mod: Optional[Any] = None
             try:
                 import curses as _curses_mod
             except ImportError:
-                _curses_mod = None
-            if _curses_mod is None or isinstance(exc, (AttributeError, getattr(_curses_mod, "error", Exception))):
+                pass
+            if _curses_mod is None or isinstance(
+                exc, (AttributeError, getattr(_curses_mod, "error", Exception))  # type: ignore[arg-type]
+            ):
                 logging.debug("Falling back to wizard mode: %s", exc)
             else:
                 raise
@@ -274,6 +275,26 @@ def _run_wizard(dry_run: bool = False) -> int:
     min_zoom = int(questionary.text("Min zoom (default 3):", default="3").ask())
     max_zoom = int(questionary.text("Max zoom (default 12):", default="12").ask())
     outdir = Path(questionary.text("Output directory:", default=str(DEFAULT_OUTDIR)).ask())
+
+    # Check if directory exists and handle user choice
+    while outdir.exists() and outdir.is_dir():
+        choice = questionary.select(
+            f"Directory '{outdir}' already exists. What would you like to do?",
+            choices=[
+                {"name": "Overwrite existing files", "value": "o"},
+                {"name": "Change output directory", "value": "d"},
+                {"name": "Cancel", "value": "q"},
+            ],
+        ).ask()
+
+        if choice == "q":
+            print("Cancelled.")
+            return 0
+        elif choice == "d":
+            outdir = Path(questionary.text("Output directory:", default=str(DEFAULT_OUTDIR)).ask())
+        else:  # choice == "o"
+            break
+
     concurrency = int(
         questionary.text("Concurrency:", default=str(provider.default_concurrency)).ask()
     )

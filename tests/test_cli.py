@@ -2,7 +2,7 @@ import platform
 import pytest
 from pathlib import Path
 from unittest.mock import patch, MagicMock
-from map_tiles_downloader.cli import build_parser, main, _requests_for_regions
+from map_tiles_downloader.cli import build_parser, main, _requests_for_regions, _has_curses
 
 
 class TestBuildParser:
@@ -183,12 +183,12 @@ class TestMainFunction:
         mock_wizard.return_value = 0
         result = main([])
         assert result == 0
-        if platform.system() == "Windows":
-            mock_wizard.assert_called_once_with()
-            mock_tui.assert_not_called()
-        else:
+        if _has_curses():
             mock_tui.assert_called_once_with()
             mock_wizard.assert_not_called()
+        else:
+            mock_wizard.assert_called_once_with()
+            mock_tui.assert_not_called()
 
     def test_main_wizard_non_windows(self):
         if platform.system() != "Windows":
@@ -197,9 +197,11 @@ class TestMainFunction:
             assert exc_info.value.code == 2  # argparse exit code for invalid choice
 
     @patch("map_tiles_downloader.cli._run_wizard")
+    @patch("map_tiles_downloader.cli._has_curses")
     @patch("platform.system")
-    def test_main_wizard_windows(self, mock_platform, mock_wizard):
+    def test_main_wizard_windows(self, mock_platform, mock_has_curses, mock_wizard):
         mock_platform.return_value = "Windows"
+        mock_has_curses.return_value = False  # Force wizard mode instead of TUI
         mock_wizard.return_value = 0
         result = main(["wizard", "--dry-run"])
         assert result == 0
