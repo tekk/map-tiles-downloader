@@ -8,4 +8,5 @@ aiofiles>=23.1
 questionary>=2.0
 lxml>=5.0
 geonamescache>=2.0
+pytest-asyncio>=0.23
 
