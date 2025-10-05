@@ -4,6 +4,7 @@ import argparse
 import asyncio
 import logging
 import os
+import platform
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
 
@@ -27,17 +28,17 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub = parser.add_subparsers(dest="command", required=False)
 
-    # Subcommand: wizard (Windows only)
-    p_wizard = sub.add_parser("wizard", help="Interactive selection of region and provider.")
-    p_wizard.add_argument(
-        "--log-level",
-        type=str,
-        default="INFO",
-        choices=["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"],
-    )
-    p_wizard.add_argument(
-        "--dry-run", action="store_true", help="Plan only and show tile count, no download"
-    )
+    if platform.system() == "Windows":
+        p_wizard = sub.add_parser("wizard", help="Interactive selection of region and provider.")
+        p_wizard.add_argument(
+            "--log-level",
+            type=str,
+            default="INFO",
+            choices=["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"],
+        )
+        p_wizard.add_argument(
+            "--dry-run", action="store_true", help="Plan only and show tile count, no download"
+        )
 
     # Subcommand: bbox
     p_bbox = sub.add_parser("bbox", help="Download tiles for a bounding box.")
@@ -143,24 +144,16 @@ def _run_interactive(dry_run: bool = False) -> int:
     if _has_curses():
         try:
             return main_tui()
-        except Exception as exc:  # pragma: no cover
-            # If curses is available but cannot be initialized (e.g. CI without TTY),
-            # gracefully fall back to the simple wizard implementation instead of
-            # crashing with a terminal setup error.
+        except Exception as exc:
             try:
-                import curses  # noqa: WPS433
+                import curses as _curses_mod
             except ImportError:
-                curses = None  # type: ignore
-            if curses is None or isinstance(exc, (AttributeError, getattr(curses, "error", Exception))):
-                # Log for debugging purposes but do not fail.
+                _curses_mod = None
+            if _curses_mod is None or isinstance(exc, (AttributeError, getattr(_curses_mod, "error", Exception))):
                 logging.debug("Falling back to wizard mode: %s", exc)
             else:
-                # Unexpected exception, re-raise.
                 raise
-    # If curses is not available or failed to initialize, use questionary wizard.
-    if dry_run:
-        return _run_wizard(dry_run=True)
-    return _run_wizard()
+    return _run_wizard(dry_run=dry_run)
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
