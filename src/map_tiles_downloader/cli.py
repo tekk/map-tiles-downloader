@@ -153,7 +153,9 @@ def _run_interactive(dry_run: bool = False) -> int:
                 logging.debug("Falling back to wizard mode: %s", exc)
             else:
                 raise
-    return _run_wizard(dry_run=dry_run)
+    if dry_run:
+        return _run_wizard(dry_run=True)
+    return _run_wizard()
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
