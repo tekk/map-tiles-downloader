@@ -1,4 +1,13 @@
 # -*- mode: python ; coding: utf-8 -*-
+import sys
+
+# Select platform-specific icon
+if sys.platform == 'win32':
+    icon_file = 'img/icon_v2.ico'
+elif sys.platform == 'darwin':
+    icon_file = 'img/icon_v2.icns'
+else:  # Linux and others
+    icon_file = 'img/icon_v2.png'
 
 a = Analysis(
     ['main.py'],
@@ -34,5 +43,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='img/icon.png',
+    icon=icon_file,
 )

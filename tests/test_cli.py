@@ -35,7 +35,6 @@ class TestBuildParser:
         assert args.west == 0.0
         assert args.north == 10.0
         assert args.east == 10.0
-        assert args.min_zoom == 1
         assert args.max_zoom == 14
 
     def test_bbox_subcommand_with_options(self):
@@ -47,8 +46,6 @@ class TestBuildParser:
                 "0",
                 "10",
                 "10",
-                "--min-zoom",
-                "5",
                 "--max-zoom",
                 "12",
                 "--provider",
@@ -65,7 +62,6 @@ class TestBuildParser:
             ]
         )
         assert args.command == "bbox"
-        assert args.min_zoom == 5
         assert args.max_zoom == 12
         assert args.provider == "osm"
         assert args.api_key == "test_key"
@@ -92,8 +88,6 @@ class TestBuildParser:
                 "0.5",
                 "--lonrgn",
                 "0.5",
-                "--min-zoom",
-                "3",
                 "--max-zoom",
                 "10",
                 "--provider",
@@ -105,7 +99,6 @@ class TestBuildParser:
         assert args.command == "kml"
         assert args.latrgn == 0.5
         assert args.lonrgn == 0.5
-        assert args.min_zoom == 3
         assert args.max_zoom == 10
 
     def test_list_subcommand_providers(self):

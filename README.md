@@ -23,25 +23,39 @@ The source code lives in the GitHub repository: [tekk/map-tiles-downloader](http
 
 First, install the project into a virtual environment. Then launch the interactive interface and follow the prompts. Select one or more continents, countries, and regions, choose a provider (Thunderforest or OpenStreetMap), set zoom levels, and pick an output directory. If the provider needs an API key you’ll be asked for it.
 
+#### MacOS / Linux
+
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-pip install -e .
+pip install . # note the dot at the end of command
 mtd
 ```
 
-If you prefer commands instead of the guided interface, you can use direct subcommands. Bounding box mode lets you fetch tiles for a given rectangle. KML mode expands points and routes into small areas around each location.
+#### Windows
+
+In Powershell in Windows Terminal (not cmd), run:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r .\requirements.txt
+pip install . # note the dot at the end of command
+mtd
+```
+
+If you need to automate, or prefer commands instead of the guided interface, there are `bbox` and `kml` subcommands (beta). Bounding box mode lets you fetch tiles for a given rectangle. KML mode expands points and routes into small areas around each location.
 
 ```bash
-mtd bbox SOUTH WEST NORTH EAST --min-zoom 3 --max-zoom 12 -o ~/maps/out
+mtd bbox SOUTH WEST NORTH EAST --max-zoom 12 -o ~/maps/out
 ```
 
 ```bash
-mtd kml /path/to/file.kml --min-zoom 3 --max-zoom 12 -o ~/maps/out
+mtd kml /path/to/file.kml --max-zoom 12 -o ~/maps/out
 ```
 
-For Thunderforest, set your API key once per session, or pass it with -k.
+For [Thunderforest](https://www.thunderforest.com/docs/apikeys/), set your API key once per session, or pass it with `-k`.
 
 ```bash
 export THUNDERFOREST_API_KEY="your_key_here"
@@ -50,9 +64,13 @@ export THUNDERFOREST_API_KEY="your_key_here"
 You can also preview a download without fetching data to see how many tiles you’ll get.
 
 ```bash
-mtd bbox 45.9668 5.7767 48.3068 8.7167 --min-zoom 3 --max-zoom 12 --dry-run
+mtd bbox 45.9668 5.7767 48.3068 8.7167 --max-zoom 12 --dry-run
 ```
 
 That’s all you need. Launch the TUI, pick areas, and the downloader will handle the rest.
+
+## Contributing
+
+I'll be very happy for any kind of contributions. Feel free to fork and make a PR, or open an issue. I'll try to maintain this project as long as I'll have enough spare time to do so.
 
 This project is created and maintained with :heart: by [tekk](https://github.com/tekk).

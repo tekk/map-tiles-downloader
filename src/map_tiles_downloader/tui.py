@@ -570,37 +570,33 @@ def tui_main(stdscr: Any, colors_enabled: bool = True) -> int:
     curses.echo()
     stdscr.clear()
     if colors_enabled and curses.has_colors():
-        stdscr.addstr(0, 0, "Min zoom (default 3):", curses.color_pair(1) | curses.A_BOLD)
-        min_zoom_s = _safe_getstr(stdscr, 0, 22, 4, default="3")
-        stdscr.addstr(1, 0, "Max zoom (default 12):", curses.color_pair(1) | curses.A_BOLD)
-        max_zoom_s = _safe_getstr(stdscr, 1, 23, 4, default="12")
+        stdscr.addstr(0, 0, "Max zoom (default 12):", curses.color_pair(1) | curses.A_BOLD)
+        max_zoom_s = _safe_getstr(stdscr, 0, 23, 4, default="12")
         stdscr.addstr(
-            2, 0, "Output directory (default ~/tiles):", curses.color_pair(1) | curses.A_BOLD
+            1, 0, "Output directory (default ~/tiles):", curses.color_pair(1) | curses.A_BOLD
         )
-        outdir_s = _safe_getstr(stdscr, 2, 34, 256, default=os.path.expanduser("~/tiles"))
+        outdir_s = _safe_getstr(stdscr, 1, 34, 256, default=os.path.expanduser("~/tiles"))
         stdscr.addstr(
-            3,
+            2,
             0,
             f"Concurrency (default {provider.default_concurrency}):",
             curses.color_pair(1) | curses.A_BOLD,
         )
     else:
-        stdscr.addstr(0, 0, "Min zoom (default 3):")
-        min_zoom_s = _safe_getstr(stdscr, 0, 22, 4, default="3")
-        stdscr.addstr(1, 0, "Max zoom (default 12):")
-        max_zoom_s = _safe_getstr(stdscr, 1, 23, 4, default="12")
-        stdscr.addstr(2, 0, "Output directory (default ~/tiles):")
-        outdir_s = _safe_getstr(stdscr, 2, 34, 256, default=os.path.expanduser("~/tiles"))
-        stdscr.addstr(3, 0, f"Concurrency (default {provider.default_concurrency}):")
+        stdscr.addstr(0, 0, "Max zoom (default 12):")
+        max_zoom_s = _safe_getstr(stdscr, 0, 23, 4, default="12")
+        stdscr.addstr(1, 0, "Output directory (default ~/tiles):")
+        outdir_s = _safe_getstr(stdscr, 1, 34, 256, default=os.path.expanduser("~/tiles"))
+        stdscr.addstr(2, 0, f"Concurrency (default {provider.default_concurrency}):")
     conc_s = _safe_getstr(
         stdscr,
-        3,
+        2,
         36 + len(str(provider.default_concurrency)),
         4,
         default=str(provider.default_concurrency),
     )
     curses.noecho()
-    min_zoom = int(min_zoom_s)
+    min_zoom = 1
     max_zoom = int(max_zoom_s)
     outdir = Path(outdir_s)
     concurrency = int(conc_s)

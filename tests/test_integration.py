@@ -317,8 +317,6 @@ class TestErrorHandlingIntegration:
                     "0.001",
                     "--provider",
                     "osm",
-                    "--min-zoom",
-                    "20",  # Invalid zoom level
                     "--max-zoom",
                     "25",  # Invalid zoom level
                     "--dry-run",

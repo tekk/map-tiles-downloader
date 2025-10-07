@@ -46,7 +46,6 @@ def build_parser() -> argparse.ArgumentParser:
     p_bbox.add_argument("west", type=float)
     p_bbox.add_argument("north", type=float)
     p_bbox.add_argument("east", type=float)
-    p_bbox.add_argument("--min-zoom", type=int, default=1)
     p_bbox.add_argument("--max-zoom", type=int, default=14)
     p_bbox.add_argument(
         "--provider", type=str, default="thunderforest", choices=list(PROVIDERS.keys())
@@ -71,7 +70,6 @@ def build_parser() -> argparse.ArgumentParser:
     p_kml.add_argument("kmlfile", type=Path)
     p_kml.add_argument("--latrgn", type=float, default=0.1)
     p_kml.add_argument("--lonrgn", type=float, default=0.1)
-    p_kml.add_argument("--min-zoom", type=int, default=1)
     p_kml.add_argument("--max-zoom", type=int, default=14)
     p_kml.add_argument(
         "--provider", type=str, default="thunderforest", choices=list(PROVIDERS.keys())
@@ -167,7 +165,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     if args.command == "bbox":
         logging.basicConfig(level=getattr(logging, str(args.log_level).upper(), logging.INFO))
         regions = {"bbox": (args.south, args.west, args.north, args.east)}
-        requests = _requests_for_regions(regions, args.min_zoom, args.max_zoom, args.max_tiles)
+        requests = _requests_for_regions(regions, 1, args.max_zoom, args.max_tiles)
         provider = PROVIDERS[args.provider]
         api_key = args.api_key or (
             os.getenv(provider.api_key_env) if provider.api_key_env else None
@@ -180,7 +178,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         url_builder = get_url_builder(provider, api_key=api_key, style=style)
         concurrency = args.concurrency if args.concurrency else provider.default_concurrency
         if args.dry_run:
-            total = count_tiles_for_regions(regions, args.min_zoom, args.max_zoom)
+            total = count_tiles_for_regions(regions, 1, args.max_zoom)
             print(f"Planned tiles: {total}", flush=True)
         else:
             downloader = TileDownloader(
@@ -192,7 +190,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     if args.command == "kml":
         logging.basicConfig(level=getattr(logging, str(args.log_level).upper(), logging.INFO))
         regions = kml_to_regions(args.kmlfile, latrgn=args.latrgn, lonrgn=args.lonrgn)
-        requests = _requests_for_regions(regions, args.min_zoom, args.max_zoom, args.max_tiles)
+        requests = _requests_for_regions(regions, 1, args.max_zoom, args.max_tiles)
         provider = PROVIDERS[args.provider]
         api_key = args.api_key or (
             os.getenv(provider.api_key_env) if provider.api_key_env else None
@@ -205,7 +203,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         url_builder = get_url_builder(provider, api_key=api_key, style=style)
         concurrency = args.concurrency if args.concurrency else provider.default_concurrency
         if args.dry_run:
-            total = count_tiles_for_regions(regions, args.min_zoom, args.max_zoom)
+            total = count_tiles_for_regions(regions, 1, args.max_zoom)
             print(f"Planned tiles: {total}", flush=True)
         else:
             downloader = TileDownloader(
@@ -265,7 +263,6 @@ def _run_wizard(dry_run: bool = False) -> int:
             default=provider.default_style or provider.styles[0],
         ).ask()
 
-    min_zoom = int(questionary.text("Min zoom (default 3):", default="3").ask())
     max_zoom = int(questionary.text("Max zoom (default 12):", default="12").ask())
     outdir = Path(questionary.text("Output directory:", default=str(DEFAULT_OUTDIR)).ask())
 
@@ -299,7 +296,7 @@ def _run_wizard(dry_run: bool = False) -> int:
         if not api_key:
             api_key = questionary.password(f"Enter API key for {provider.display_name}:").ask()
 
-    total = count_tiles_for_regions(regions, min_zoom, max_zoom)
+    total = count_tiles_for_regions(regions, 1, max_zoom)
     print(f"Planned tiles: {total}")
     if dry_run:
         print("Dry-run complete.")
@@ -310,7 +307,7 @@ def _run_wizard(dry_run: bool = False) -> int:
         print("Cancelled.")
         return 0
 
-    requests = _requests_for_regions(regions, min_zoom, max_zoom, None)
+    requests = _requests_for_regions(regions, 1, max_zoom, None)
     url_builder = get_url_builder(provider, api_key=api_key, style=style)
     downloader = TileDownloader(
         outdir, url_builder, headers=provider.headers, concurrent_requests=concurrency
