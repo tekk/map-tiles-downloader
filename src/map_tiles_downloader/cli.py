@@ -6,7 +6,7 @@ import logging
 import os
 import platform
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Dict, List, Optional, Sequence, Tuple
 
 from .downloader import TileDownloader, TileRequest
 from .tiling import iter_tiles_for_bbox, count_tiles_for_regions
@@ -139,24 +139,17 @@ def _has_curses() -> bool:
 
 
 def _run_interactive(dry_run: bool = False) -> int:
-    if _has_curses():
-        try:
-            return main_tui()
-        except Exception as exc:
-            _curses_mod: Optional[Any] = None
-            try:
-                import curses as _curses_mod
-            except ImportError:
-                pass
-            if _curses_mod is None or isinstance(
-                exc, (AttributeError, getattr(_curses_mod, "error", Exception))  # type: ignore[arg-type]
-            ):
-                logging.debug("Falling back to wizard mode: %s", exc)
-            else:
-                raise
-    if dry_run:
-        return _run_wizard(dry_run=True)
-    return _run_wizard()
+    # Always attempt the TUI first; it will fall back to the wizard internally
+    # if curses is unavailable or fails to initialise.
+    try:
+        return main_tui()
+    except Exception as exc:
+        # Best-effort recovery: if curses blew up mid-initialisation (e.g. very
+        # small terminal) fall back to the wizard instead of aborting.
+        logging.debug("TUI failed, falling back to wizard: %s", exc)
+        if dry_run:
+            return _run_wizard(dry_run=True)
+        return _run_wizard()
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:

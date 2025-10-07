@@ -197,11 +197,12 @@ class TestMainFunction:
             assert exc_info.value.code == 2  # argparse exit code for invalid choice
 
     @patch("map_tiles_downloader.cli._run_wizard")
-    @patch("map_tiles_downloader.cli._has_curses")
+    @patch("map_tiles_downloader.cli.main_tui")
     @patch("platform.system")
-    def test_main_wizard_windows(self, mock_platform, mock_has_curses, mock_wizard):
+    def test_main_wizard_windows(self, mock_platform, mock_tui, mock_wizard):
         mock_platform.return_value = "Windows"
-        mock_has_curses.return_value = False  # Force wizard mode instead of TUI
+        # Force TUI to fail so it falls back to wizard
+        mock_tui.side_effect = Exception("Simulated TUI failure")
         mock_wizard.return_value = 0
         result = main(["wizard", "--dry-run"])
         assert result == 0

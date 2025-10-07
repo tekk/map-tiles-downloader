@@ -697,11 +697,25 @@ def tui_main(stdscr: Any, colors_enabled: bool = True) -> int:
 
 
 def main_tui(colors_enabled: bool = True) -> int:
+    """Entry-point for the interactive *text* UI.
+
+    If a working :pymod:`curses` implementation is available, the full-featured
+    curses TUI is launched.  Otherwise (e.g. on vanilla Windows where curses is
+    missing) we silently fall back to the *wizard* flow that uses
+    :pypi:`questionary` for an interactive - but non-curses - experience.  This
+    guarantees that invoking the application without any parameters always
+    opens a user-friendly text interface, regardless of the underlying
+    platform.
+    """
+
     if not HAS_CURSES:
-        print("Error: TUI mode requires curses library, which is not available on this platform.")
-        print("The curses library is typically available on Unix-like systems (Linux, macOS).")
-        print("On Windows, please use the 'wizard' command instead.")
-        return 1
+        # Defer import to avoid a hard dependency on questionary when curses is
+        # available.
+        from .cli import _run_wizard
+
+        # Run the wizard in normal (non-dry-run) mode.
+        return _run_wizard(dry_run=False)
+
     return curses.wrapper(tui_main, colors_enabled)
 
 
