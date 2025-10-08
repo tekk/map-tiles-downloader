@@ -7,11 +7,28 @@ This app helps you fetch map tiles quickly, for offline use. You can pick places
 [![CI](https://github.com/tekk/map-tiles-downloader/actions/workflows/ci.yml/badge.svg)](https://github.com/tekk/map-tiles-downloader/actions/workflows/ci.yml)
 [![Release](https://github.com/tekk/map-tiles-downloader/actions/workflows/release.yml/badge.svg)](https://github.com/tekk/map-tiles-downloader/actions/workflows/release.yml)
 [![PyPI - Python Version](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg)](LICENSE)
 
-![Map Tiles Downloader - screenshot](img/screenshot.png)
+![Map Tiles Downloader - screenshot](https://github.com/tekk/map-tiles-downloader/blob/7794a00bf113241f3260ea58a8ce6ba606483754/img/screenshot.png)
 
-## Download
+## Install from PyPI
+
+```bash
+pip install mt-downloader
+```
+
+If you get a warning about "breaking system packages", use:
+
+```bash
+pip install --user mt-downloader
+```
+
+Then run:
+```bash
+mt-downloader
+```
+
+## Pre-compiled binaries
 
 Download the installer/pre-compiled binaries from the Github [Releases](https://github.com/tekk/map-tiles-downloader/releases) page.
 
@@ -30,7 +47,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 pip install . # note the dot at the end of command
-mtd
+mt-downloader
 ```
 
 #### Windows
@@ -42,17 +59,17 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r .\requirements.txt
 pip install . # note the dot at the end of command
-mtd
+mt-downloader
 ```
 
 If you need to automate, or prefer commands instead of the guided interface, there are `bbox` and `kml` subcommands (beta). Bounding box mode lets you fetch tiles for a given rectangle. KML mode expands points and routes into small areas around each location.
 
 ```bash
-mtd bbox SOUTH WEST NORTH EAST --max-zoom 12 -o ~/maps/out
+mt-downloader bbox SOUTH WEST NORTH EAST --max-zoom 12 -o ~/maps/out
 ```
 
 ```bash
-mtd kml /path/to/file.kml --max-zoom 12 -o ~/maps/out
+mt-downloader kml /path/to/file.kml --max-zoom 12 -o ~/maps/out
 ```
 
 For [Thunderforest](https://www.thunderforest.com/docs/apikeys/), set your API key once per session, or pass it with `-k`.
@@ -64,7 +81,7 @@ export THUNDERFOREST_API_KEY="your_key_here"
 You can also preview a download without fetching data to see how many tiles you’ll get.
 
 ```bash
-mtd bbox 45.9668 5.7767 48.3068 8.7167 --max-zoom 12 --dry-run
+mt-downloader bbox 45.9668 5.7767 48.3068 8.7167 --max-zoom 12 --dry-run
 ```
 
 That’s all you need. Launch the TUI, pick areas, and the downloader will handle the rest.
