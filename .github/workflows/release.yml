@@ -59,7 +59,7 @@ jobs:
           set -euo pipefail
           python -m pip install --upgrade pip
           pip install . pyinstaller
-          pyinstaller --onefile --name map-tiles-downloader --icon img/icon.png src/map_tiles_downloader/__main__.py
+          pyinstaller --onefile --name map-tiles-downloader --icon img/icon_v2.png src/map_tiles_downloader/__main__.py
           ver="${{ github.ref_name }}"
           arch=$(uname -m)
           mkdir -p dmgroot build-out
@@ -127,7 +127,7 @@ jobs:
 
       - name: Build with PyInstaller
         run: |
-          pyinstaller --onefile --name map-tiles-downloader --icon img/icon.png src/map_tiles_downloader/__main__.py
+          pyinstaller --onefile --name map-tiles-downloader --icon img/icon_v2.png src/map_tiles_downloader/__main__.py
         env:
           PYINSTALLER_CACHE_DIR: ~/.cache/pyinstaller
 
@@ -164,7 +164,7 @@ jobs:
           EOF
 
           # Create icon
-          cp img/icon.png AppDir/map-tiles-downloader.png
+          cp img/icon_v2.png AppDir/map-tiles-downloader.png
 
           # Create AppRun script
           cat > AppDir/AppRun << 'EOF'
