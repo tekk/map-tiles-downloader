@@ -19,8 +19,7 @@ pipx installs Python apps into isolated environments and exposes the commands on
 
 ```bash
 brew install pipx
-pipx ensurepath
-exec zsh
+pipx ensurepath # then restart your terminal
 pipx install mt-downloader
 mt-downloader  # or: map-tiles-downloader
 ```
@@ -31,8 +30,7 @@ In PowerShell:
 
 ```powershell
 winget install --id=Python.Pipx -e
-pipx ensurepath
-# Close and reopen the terminal (or run: $env:Path = [System.Environment]::GetEnvironmentVariable('Path','User') + ';' + [System.Environment]::GetEnvironmentVariable('Path','Machine'))
+pipx ensurepath # then close and reopen the terminal
 pipx install mt-downloader
 mt-downloader  # or: map-tiles-downloader
 ```

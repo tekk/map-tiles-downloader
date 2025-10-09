@@ -145,6 +145,7 @@ def _run_interactive(dry_run: bool = False) -> int:
         # Best-effort recovery: if curses blew up mid-initialisation (e.g. very
         # small terminal) fall back to the wizard instead of aborting.
         logging.debug("TUI failed, falling back to wizard: %s", exc)
+        print("Interactive UI failed, falling back to wizard...", flush=True)
         if dry_run:
             return _run_wizard(dry_run=True)
         return _run_wizard()
@@ -156,6 +157,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     if args.command is None:
         logging.basicConfig(level=logging.INFO)
+        print("Launching interactive mode...", flush=True)
         return _run_interactive()
 
     if args.command == "wizard":
