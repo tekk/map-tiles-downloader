@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mt-downloader"
-version = "1.2.8"
+version = "1.2.9"
 description = "Fast interactive Meshtastic and MeshCore maps downloader"
 readme = "README.md"
 requires-python = ">=3.9"
