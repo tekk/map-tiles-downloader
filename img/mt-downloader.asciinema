@@ -1,0 +1,3 @@
+{"version":3,"term":{"cols":135,"rows":26,"type":"xterm-256color","theme":{"fg":"#f7f7f7","bg":"#0b0b0b","palette":"#000000:#990000:#00a600:#999900:#2a61b1:#b300b3:#00a6b3:#f8f8f8:#666666:#e60000:#00d900:#e6e600:#007ffe:#e600e6:#00e6e6:#fff5d3"}},"timestamp":1759999476,"command":"mt-downloader","env":{"SHELL":"/bin/zsh"}}
+[0.009327, "o", "/bin/sh: mt-downloader: command not found\r\n"]
+[0.000317, "x", "127"]
