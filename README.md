@@ -9,7 +9,7 @@ This app helps you fetch map tiles quickly, for offline use. You can pick places
 [![PyPI - Python Version](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/)
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg)](LICENSE)
 
-![Map Tiles Downloader - screenshot](https://github.com/tekk/map-tiles-downloader/blob/7794a00bf113241f3260ea58a8ce6ba606483754/img/screenshot.png)
+[![asciicast](https://asciinema.org/a/747669.svg)](https://asciinema.org/a/747669)
 
 ## Install with pipx (recommended)
 
@@ -33,23 +33,6 @@ winget install --id=Python.Pipx -e
 pipx ensurepath # then close and reopen the terminal
 pipx install mt-downloader
 mt-downloader  # or: map-tiles-downloader
-```
-
-## Install from PyPI
-
-```bash
-pip install mt-downloader
-```
-
-If you get a warning about "breaking system packages", use:
-
-```bash
-pip install --user mt-downloader
-```
-
-Then run:
-```bash
-mt-downloader
 ```
 
 ## Pre-compiled binaries
