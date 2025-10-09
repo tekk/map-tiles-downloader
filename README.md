@@ -26,13 +26,15 @@ mt-downloader  # or: map-tiles-downloader
 
 #### Windows (winget)
 
-In PowerShell:
+First install latest Python from the Windows Store.
+
+Then in Windows Terminal, run (one by one):
 
 ```powershell
-winget install --id=Python.Pipx -e
-pipx ensurepath # then close and reopen the terminal
+pip install pipx
+python -m pipx ensurepath # then close and restart the Terminal
 pipx install mt-downloader
-mt-downloader  # or: map-tiles-downloader
+mt-downloader
 ```
 
 ## Pre-compiled binaries
