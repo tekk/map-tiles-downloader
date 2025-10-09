@@ -9,7 +9,7 @@ This app helps you fetch map tiles quickly, for offline use. You can pick places
 [![PyPI - Python Version](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/)
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg)](LICENSE)
 
-[![asciicast](https://asciinema.org/a/747669.svg)](https://asciinema.org/a/747669)
+[![asciicast](https://asciinema.org/a/747679.svg)](https://asciinema.org/a/747679)
 
 ## Install with pipx (recommended)
 
