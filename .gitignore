@@ -125,3 +125,4 @@ output/
 map_tiles/
 *.mbtiles
 
+mt_downloader-*
