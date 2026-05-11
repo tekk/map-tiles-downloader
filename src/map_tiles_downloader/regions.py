@@ -46,8 +46,15 @@ def load_region_catalog() -> RegionCatalog:
         gc.get_cities()
     )  # geonameid -> {'countrycode': 'US', 'admin1code': 'CA', 'latitude': '34.1', 'longitude': '-118.3', ...}
 
-    # Build city-derived admin1 bounding boxes per country
+    # US states ship with geonamescache (code -> {'name': 'California', ...}).
+    us_states_getter = getattr(gc, "get_us_states", None)
+    us_states = us_states_getter() if callable(us_states_getter) else {}
+
+    # Build city-derived admin1 bounding boxes per country, and track the most
+    # populous city per admin1 to use as a human-readable region label when no
+    # subdivision-name dataset is available in geonamescache.
     admin1_bbox: Dict[str, Dict[str, List[float]]] = {}
+    admin1_top_city: Dict[str, Dict[str, Tuple[int, str]]] = {}
     for city in cities.values():
         try:
             cc = city.get("countrycode")
@@ -66,6 +73,17 @@ def load_region_catalog() -> RegionCatalog:
                 box[1] = min(box[1], lon)
                 box[2] = max(box[2], lat)
                 box[3] = max(box[3], lon)
+
+            try:
+                pop = int(city.get("population") or 0)
+            except (TypeError, ValueError):
+                pop = 0
+            cname = city.get("name") or city.get("asciiname")
+            if cname:
+                top_map = admin1_top_city.setdefault(cc, {})
+                cur = top_map.get(a1)
+                if cur is None or pop > cur[0]:
+                    top_map[a1] = (pop, cname)
         except Exception:
             continue
 
@@ -91,7 +109,18 @@ def load_region_catalog() -> RegionCatalog:
                 for a1code, box in admin1_bbox[iso2].items():
                     key = f"{iso2}.{a1code}"
                     sub = subdivisions.get(key) if isinstance(subdivisions, dict) else None
-                    state_name = (sub.get("name") if isinstance(sub, dict) else None) or a1code
+                    sub_name = sub.get("name") if isinstance(sub, dict) else None
+
+                    us_name: Optional[str] = None
+                    if iso2 == "US" and isinstance(us_states, dict):
+                        us_entry = us_states.get(a1code)
+                        if isinstance(us_entry, dict):
+                            us_name = us_entry.get("name")
+
+                    top = admin1_top_city.get(iso2, {}).get(a1code)
+                    city_label = f"{a1code} (around {top[1]})" if top else a1code
+
+                    state_name = sub_name or us_name or city_label
                     states[state_name] = (
                         float(box[0]),
                         float(box[1]),
