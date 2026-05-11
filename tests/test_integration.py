@@ -44,6 +44,7 @@ class TestCLIIntegration:
                 ],
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
                 cwd=Path.cwd(),
             )
 
@@ -74,6 +75,7 @@ class TestCLIIntegration:
                 ],
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
                 cwd=Path.cwd(),
             )
 
@@ -86,6 +88,7 @@ class TestCLIIntegration:
             [SCRIPT_PATH, "list", "providers"],
             capture_output=True,
             text=True,
+            encoding="utf-8",
             cwd=Path.cwd(),
         )
 
@@ -100,6 +103,7 @@ class TestCLIIntegration:
             [SCRIPT_PATH, "list", "regions"],
             capture_output=True,
             text=True,
+            encoding="utf-8",
             cwd=Path.cwd(),
         )
 
@@ -114,6 +118,7 @@ class TestCLIIntegration:
             [SCRIPT_PATH, "invalid_command"],
             capture_output=True,
             text=True,
+            encoding="utf-8",
             cwd=Path.cwd(),
         )
 
@@ -123,7 +128,11 @@ class TestCLIIntegration:
     def test_bbox_missing_coordinates(self):
         """Test bbox command with missing coordinates"""
         result = subprocess.run(
-            [SCRIPT_PATH, "bbox"], capture_output=True, text=True, cwd=Path.cwd()
+            [SCRIPT_PATH, "bbox"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            cwd=Path.cwd(),
         )
 
         assert result.returncode != 0
@@ -135,6 +144,7 @@ class TestCLIIntegration:
             [SCRIPT_PATH, "kml", "nonexistent.kml"],
             capture_output=True,
             text=True,
+            encoding="utf-8",
             cwd=Path.cwd(),
         )
 
@@ -177,6 +187,7 @@ class TestKMLIntegration:
                 ],
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
                 cwd=Path.cwd(),
             )
 
@@ -218,6 +229,7 @@ class TestKMLIntegration:
                 ],
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
                 cwd=Path.cwd(),
             )
 
@@ -253,6 +265,7 @@ class TestProviderIntegration:
                 ],
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
                 cwd=Path.cwd(),
             )
 
@@ -291,6 +304,7 @@ class TestProviderIntegration:
                 ],
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
                 cwd=Path.cwd(),
                 env=env,
             )
@@ -325,6 +339,7 @@ class TestErrorHandlingIntegration:
                 ],
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
                 cwd=Path.cwd(),
             )
 
@@ -355,6 +370,7 @@ class TestErrorHandlingIntegration:
                 ],
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
                 cwd=Path.cwd(),
             )
 
