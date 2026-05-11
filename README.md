@@ -95,6 +95,16 @@ mt-downloader bbox 45.9668 5.7767 48.3068 8.7167 --max-zoom 12 --dry-run
 
 That’s all you need. Launch the TUI, pick areas, and the downloader will handle the rest.
 
+## Region names
+
+The region picker uses the `geonamescache` library for its area data. US states are listed by their proper names (e.g. *California*, *Texas*). For other countries, the library doesn't ship subdivision names, so each first-level region is labeled with its raw geonames admin1 code plus a hint of the most populous city it contains, for example:
+
+- Canada: `08 (around Toronto)` — Ontario
+- Poland: `78 (around Warsaw)` — Mazowieckie
+- Germany: `02 (around Munich)` — Bavaria
+
+The numeric code matches the *adm1* dropdown under the *Hierarchy* tab on [geonames.org](https://www.geonames.org/), so you can cross-check the exact administrative region if needed.
+
 ## Contributing
 
 I'll be very happy for any kind of contributions. Feel free to fork and make a PR, or open an issue. I'll try to maintain this project as long as I'll have enough spare time to do so.
