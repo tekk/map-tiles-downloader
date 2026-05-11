@@ -17,7 +17,6 @@ from .regions import load_region_catalog, RegionCatalog
 from .tui import main_tui
 import questionary
 
-
 DEFAULT_OUTDIR = Path(os.path.expanduser("~/tiles"))
 
 
