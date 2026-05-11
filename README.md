@@ -37,6 +37,31 @@ pipx install mt-downloader
 mt-downloader
 ```
 
+## Docker
+
+A `Dockerfile` is included. Build the image once, then run it interactively and mount a host directory at `/maps` to keep the downloaded tiles on your machine:
+
+```bash
+docker build -t mt-downloader .
+docker run --rm -it -v "$PWD/maps:/maps" mt-downloader
+```
+
+To use the non-interactive subcommands:
+
+```bash
+docker run --rm -it -v "$PWD/maps:/maps" mt-downloader \
+  bbox 45.9668 5.7767 48.3068 8.7167 --max-zoom 12 -o /maps/out
+```
+
+For Thunderforest, pass your API key with `-e`:
+
+```bash
+docker run --rm -it -e THUNDERFOREST_API_KEY="your_key_here" \
+  -v "$PWD/maps:/maps" mt-downloader
+```
+
+By default the image installs the version pinned in the `Dockerfile`. To build against a different release, pass `--build-arg MT_DOWNLOADER_VERSION=x.y.z`.
+
 ## Pre-compiled binaries
 
 Download the installer/pre-compiled binaries from the Github [Releases](https://github.com/tekk/map-tiles-downloader/releases) page.
