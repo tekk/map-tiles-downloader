@@ -5,6 +5,7 @@ import asyncio
 import logging
 import os
 import platform
+import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
 
@@ -151,7 +152,21 @@ def _run_interactive(dry_run: bool = False) -> int:
         return _run_wizard()
 
 
+def _force_utf8_stdio() -> None:
+    # Windows consoles default to cp1252, which can't encode non-Latin1 region
+    # names ("Łódź", "Kočovce"). Reconfigure stdio to UTF-8 so the same code
+    # works on every platform.
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if callable(reconfigure):
+            try:
+                reconfigure(encoding="utf-8", errors="replace")
+            except Exception:
+                pass
+
+
 def main(argv: Optional[Sequence[str]] = None) -> int:
+    _force_utf8_stdio()
     parser = build_parser()
     args = parser.parse_args(argv)
 
