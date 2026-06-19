@@ -22,8 +22,8 @@ jobs:
           - arch: arm64
             runner: windows-11-arm
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
       - name: Build EXE
@@ -35,7 +35,7 @@ jobs:
           New-Item -ItemType Directory -Force -Path build-out | Out-Null
           $ver = "${{ github.ref_name }}"
           Copy-Item "dist/map-tiles-downloader.exe" ("build-out/map-tiles-downloader-Windows-${{ matrix.arch }}-" + $ver + ".exe")
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: windows-${{ matrix.arch }}-exe
           path: build-out/*
@@ -49,8 +49,8 @@ jobs:
       matrix:
         os: [macos-13, macos-14]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
       - name: Build binary and DMG
@@ -65,7 +65,7 @@ jobs:
           mkdir -p dmgroot build-out
           cp dist/map-tiles-downloader dmgroot/
           hdiutil create -volname "Map Tiles Downloader" -srcfolder dmgroot -ov -format UDZO "build-out/map-tiles-downloader-macOS-$arch-$ver.dmg"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: macos-dmg-${{ matrix.os }}
           path: build-out/*
@@ -89,15 +89,15 @@ jobs:
             appimage_arch: aarch64
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
       - name: Cache pip dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-${{ matrix.arch }}-pip-${{ hashFiles('**/requirements.txt', 'pyproject.toml') }}
@@ -105,7 +105,7 @@ jobs:
             ${{ runner.os }}-${{ matrix.arch }}-pip-
 
       - name: Cache PyInstaller
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/pyinstaller
           key: ${{ runner.os }}-${{ matrix.arch }}-pyinstaller-${{ hashFiles('**/requirements.txt', 'pyproject.toml') }}
@@ -204,7 +204,7 @@ jobs:
               dist/map-tiles-downloader=/usr/bin/map-tiles-downloader
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: linux-${{ matrix.arch }}-artifacts
           path: build-out/*
@@ -213,8 +213,8 @@ jobs:
     name: Build sdist and wheel
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
       - name: Build dists
@@ -224,7 +224,7 @@ jobs:
           python -m build
       - name: Upload package artifacts
         if: ${{ github.actor != 'nektos/act' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: python-dists
           path: dist/*
@@ -237,12 +237,12 @@ jobs:
     needs: [build-windows, build-macos, build-linux, build-packages]
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           path: ./artifacts
           merge-multiple: true
       - name: Create Release and upload assets
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.ref_name }}
           name: ${{ github.ref_name }}
